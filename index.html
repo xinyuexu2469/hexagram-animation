@@ -682,6 +682,194 @@
             overflow-y: auto;
             backdrop-filter: blur(20px);
             box-shadow: -8px 0 40px rgba(0, 0, 0, 0.9);
+            position: relative;
+            transition: width 0.3s ease;
+        }
+
+        /* Resize Handle - Available on all devices */
+        #resizeHandle {
+            position: absolute;
+            left: -8px;
+            top: 0;
+            width: 16px;
+            height: 100%;
+            background: linear-gradient(90deg, #ffd700, #ffed4e);
+            cursor: ew-resize;
+            display: block;
+            z-index: 10;
+            border-radius: 8px 0 0 8px;
+            box-shadow: -2px 0 10px rgba(255, 215, 0, 0.5);
+            transition: all 0.3s ease;
+            opacity: 0.7;
+        }
+
+        #resizeHandle:hover {
+            background: linear-gradient(90deg, #ffed4e, #ffd700);
+            box-shadow: -4px 0 15px rgba(255, 215, 0, 0.7);
+            opacity: 1;
+            transform: scaleX(1.2);
+        }
+
+        #resizeHandle::before {
+            content: '⋮⋮';
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            color: #1a1a2e;
+            font-weight: bold;
+            font-size: 12px;
+            line-height: 1;
+            letter-spacing: 2px;
+        }
+
+        /* Responsive Styles */
+        #uiPanel {
+            min-width: 280px;
+            max-width: 80vw;
+        }
+
+        /* Landscape mode for mobile */
+        @media (max-height: 600px) and (orientation: landscape) {
+            #uiPanel {
+                min-width: 320px;
+                max-width: 50vw;
+            }
+            
+            #gameContainer {
+                height: 100vh;
+            }
+            
+            #sceneArea {
+                flex: 1;
+            }
+            
+            /* Optimize UI elements for landscape */
+            #inventory {
+                margin-bottom: 12px;
+            }
+            
+            #quickActions {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 6px;
+                margin-bottom: 12px;
+            }
+            
+            .action-btn {
+                padding: 8px;
+                font-size: 11px;
+            }
+            
+            #commandHistory {
+                max-height: 200px;
+                margin-bottom: 12px;
+            }
+            
+            .command-entry {
+                margin: 4px 0;
+                padding: 6px;
+                font-size: 11px;
+            }
+            
+            #commandInput {
+                padding: 8px;
+                font-size: 12px;
+                margin-bottom: 6px;
+            }
+            
+            #inventory h3 {
+                font-size: 1em;
+                margin-bottom: 8px;
+                padding-bottom: 4px;
+            }
+            
+            .inventory-item {
+                padding: 8px;
+                margin: 4px 0;
+                font-size: 12px;
+            }
+            
+            .inventory-item-icon {
+                font-size: 18px;
+            }
+            
+            .inventory-item-name {
+                font-size: 12px;
+            }
+        }
+
+        /* Desktop specific adjustments */
+        @media (min-width: 769px) {
+            #uiPanel {
+                max-width: 600px;
+            }
+        }
+
+        /* Landscape Orientation Hint */
+        #landscapeHint {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.95), rgba(20, 20, 40, 0.95));
+            z-index: 3000;
+            backdrop-filter: blur(10px);
+            animation: landscapeHintFadeIn 0.5s ease;
+        }
+
+        .landscape-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            padding: 40px;
+        }
+
+        .landscape-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+            animation: landscapeRotate 2s ease-in-out infinite;
+        }
+
+        @keyframes landscapeRotate {
+            0%, 100% { transform: rotate(0deg); }
+            50% { transform: rotate(90deg); }
+        }
+
+        .landscape-text {
+            font-size: 1.8em;
+            color: #ffd700;
+            margin-bottom: 10px;
+            font-weight: bold;
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
+        }
+
+        .landscape-subtitle {
+            font-size: 1.2em;
+            color: #fff;
+            opacity: 0.8;
+        }
+
+        @keyframes landscapeHintFadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Show landscape hint on portrait mobile */
+        @media (max-width: 768px) and (orientation: portrait) and (max-height: 800px) {
+            #landscapeHint {
+                display: block;
+            }
+        }
+
+        /* Hide landscape hint when in landscape or on desktop */
+        @media (orientation: landscape) or (min-width: 769px) {
+            #landscapeHint {
+                display: none !important;
+            }
         }
 
         #inventory {
@@ -1126,6 +1314,15 @@
         </div>
     </div>
 
+    <!-- Landscape Orientation Hint -->
+    <div id="landscapeHint">
+        <div class="landscape-content">
+            <div class="landscape-icon">📱➡️</div>
+            <div class="landscape-text">请横屏以获得最佳游戏体验</div>
+            <div class="landscape-subtitle">Rotate your device to landscape mode</div>
+        </div>
+    </div>
+
     <div id="gameContainer">
         <!-- Scene Area -->
         <div id="sceneArea">
@@ -1163,6 +1360,7 @@
 
         <!-- UI Panel -->
         <div id="uiPanel">
+            <div id="resizeHandle"></div>
             <div id="inventory">
                 <h3><span>📦</span> Inventory</h3>
                 <div id="inventoryList">
@@ -5435,9 +5633,114 @@ and may every step beyond this courtyard bring you strength, wonder, and joy.</s
             return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`;
         }
 
+        // Mobile Panel Resize Functionality
+        let isResizing = false;
+        let startX = 0;
+        let startWidth = 0;
+
+        function initMobileResize() {
+            const resizeHandle = document.getElementById('resizeHandle');
+            const uiPanel = document.getElementById('uiPanel');
+            
+            if (!resizeHandle || !uiPanel) return;
+
+            // Mouse events for desktop
+            resizeHandle.addEventListener('mousedown', startResize);
+            document.addEventListener('mousemove', doResize);
+            document.addEventListener('mouseup', stopResize);
+
+            // Touch events for mobile
+            resizeHandle.addEventListener('touchstart', handleTouchStart, { passive: false });
+            document.addEventListener('touchmove', handleTouchMove, { passive: false });
+            document.addEventListener('touchend', stopResize);
+
+            // Prevent text selection during resize
+            resizeHandle.addEventListener('selectstart', (e) => e.preventDefault());
+        }
+
+        function startResize(e) {
+            isResizing = true;
+            startX = e.clientX;
+            startWidth = parseInt(window.getComputedStyle(document.getElementById('uiPanel')).width, 10);
+            document.body.style.cursor = 'ew-resize';
+            document.body.style.userSelect = 'none';
+        }
+
+        function handleTouchStart(e) {
+            e.preventDefault();
+            isResizing = true;
+            startX = e.touches[0].clientX;
+            startWidth = parseInt(window.getComputedStyle(document.getElementById('uiPanel')).width, 10);
+            document.body.style.userSelect = 'none';
+        }
+
+        function doResize(e) {
+            if (!isResizing) return;
+            
+            const uiPanel = document.getElementById('uiPanel');
+            const deltaX = e.clientX - startX;
+            const newWidth = startWidth - deltaX; // Subtract because we're resizing from the left
+            
+            // Set boundaries based on screen size and orientation
+            const minWidth = 280;
+            let maxWidth;
+            
+            if (window.innerWidth >= 769) {
+                // Desktop
+                maxWidth = Math.min(800, window.innerWidth * 0.6);
+            } else if (window.innerHeight <= 600 && window.innerWidth > window.innerHeight) {
+                // Mobile landscape
+                maxWidth = Math.min(500, window.innerWidth * 0.5);
+            } else {
+                // Mobile portrait
+                maxWidth = Math.min(600, window.innerWidth * 0.8);
+            }
+            
+            if (newWidth >= minWidth && newWidth <= maxWidth) {
+                uiPanel.style.width = newWidth + 'px';
+            }
+        }
+
+        function handleTouchMove(e) {
+            if (!isResizing) return;
+            e.preventDefault();
+            
+            const uiPanel = document.getElementById('uiPanel');
+            const deltaX = e.touches[0].clientX - startX;
+            const newWidth = startWidth - deltaX;
+            
+            // Set boundaries based on screen size and orientation
+            const minWidth = 280;
+            let maxWidth;
+            
+            if (window.innerWidth >= 769) {
+                // Desktop
+                maxWidth = Math.min(800, window.innerWidth * 0.6);
+            } else if (window.innerHeight <= 600 && window.innerWidth > window.innerHeight) {
+                // Mobile landscape
+                maxWidth = Math.min(500, window.innerWidth * 0.5);
+            } else {
+                // Mobile portrait
+                maxWidth = Math.min(600, window.innerWidth * 0.8);
+            }
+            
+            if (newWidth >= minWidth && newWidth <= maxWidth) {
+                uiPanel.style.width = newWidth + 'px';
+            }
+        }
+
+        function stopResize() {
+            if (!isResizing) return;
+            
+            isResizing = false;
+            document.body.style.cursor = '';
+            document.body.style.userSelect = '';
+        }
+
         // Start Game
         window.onload = function() {
             initGame();
+            initMobileResize();
             document.getElementById('commandInput').focus();
         };
 
