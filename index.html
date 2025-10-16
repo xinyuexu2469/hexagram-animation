@@ -729,11 +729,12 @@
             max-width: 80vw;
         }
 
-        /* Landscape mode for mobile */
+        /* Landscape mode for mobile - match desktop proportions */
         @media (max-height: 600px) and (orientation: landscape) {
             #uiPanel {
-                min-width: 320px;
-                max-width: 50vw;
+                min-width: 0px; /* Allow complete hiding */
+                max-width: 60vw; /* Match desktop max width */
+                width: 380px; /* Default desktop width */
             }
             
             #gameContainer {
@@ -798,6 +799,37 @@
             }
         }
 
+        /* Fullscreen mode styles */
+        .fullscreen-mode {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            z-index: 9999 !important;
+        }
+
+        .fullscreen-mode #uiPanel {
+            position: absolute !important;
+            right: 0 !important;
+            top: 0 !important;
+            height: 100vh !important;
+        }
+
+        /* Hide UI panel completely */
+        #uiPanel.hidden {
+            width: 0 !important;
+            min-width: 0 !important;
+            max-width: 0 !important;
+            padding: 0 !important;
+            border: none !important;
+            overflow: hidden !important;
+        }
+
+        #uiPanel.hidden #resizeHandle {
+            display: none !important;
+        }
+
         /* Desktop specific adjustments */
         @media (min-width: 769px) {
             #uiPanel {
@@ -805,72 +837,6 @@
             }
         }
 
-        /* Landscape Orientation Hint */
-        #landscapeHint {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(135deg, rgba(0, 0, 0, 0.95), rgba(20, 20, 40, 0.95));
-            z-index: 3000;
-            backdrop-filter: blur(10px);
-            animation: landscapeHintFadeIn 0.5s ease;
-        }
-
-        .landscape-content {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            text-align: center;
-            padding: 40px;
-        }
-
-        .landscape-icon {
-            font-size: 4em;
-            margin-bottom: 20px;
-            animation: landscapeRotate 2s ease-in-out infinite;
-        }
-
-        @keyframes landscapeRotate {
-            0%, 100% { transform: rotate(0deg); }
-            50% { transform: rotate(90deg); }
-        }
-
-        .landscape-text {
-            font-size: 1.8em;
-            color: #ffd700;
-            margin-bottom: 10px;
-            font-weight: bold;
-            text-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
-        }
-
-        .landscape-subtitle {
-            font-size: 1.2em;
-            color: #fff;
-            opacity: 0.8;
-        }
-
-        @keyframes landscapeHintFadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        /* Show landscape hint on portrait mobile */
-        @media (max-width: 768px) and (orientation: portrait) and (max-height: 800px) {
-            #landscapeHint {
-                display: block;
-            }
-        }
-
-        /* Hide landscape hint when in landscape or on desktop */
-        @media (orientation: landscape) or (min-width: 769px) {
-            #landscapeHint {
-                display: none !important;
-            }
-        }
 
         #inventory {
             margin-bottom: 18px;
@@ -1314,14 +1280,6 @@
         </div>
     </div>
 
-    <!-- Landscape Orientation Hint -->
-    <div id="landscapeHint">
-        <div class="landscape-content">
-            <div class="landscape-icon">📱➡️</div>
-            <div class="landscape-text">请横屏以获得最佳游戏体验</div>
-            <div class="landscape-subtitle">Rotate your device to landscape mode</div>
-        </div>
-    </div>
 
     <div id="gameContainer">
         <!-- Scene Area -->
@@ -1371,6 +1329,7 @@
             <div id="quickActions">
                 <button class="action-btn primary" onclick="executeCommand('look')">👁️ Look</button>
                 <button class="action-btn primary" onclick="executeCommand('inventory')">🎒 Inventory</button>
+                <button class="action-btn" onclick="toggleFullscreen()">📺 全屏</button>
                 <button class="action-btn" onclick="showHelp()">❓ Help</button>
                 <button class="action-btn" onclick="refreshRoom()">🔄 Refresh</button>
                 <button class="action-btn" onclick="forceTheaterDisplay()" id="theaterRefreshBtn" style="display: none;">🎭 Fix Theater</button>
@@ -5681,23 +5640,30 @@ and may every step beyond this courtyard bring you strength, wonder, and joy.</s
             const deltaX = e.clientX - startX;
             const newWidth = startWidth - deltaX; // Subtract because we're resizing from the left
             
-            // Set boundaries based on screen size and orientation
-            const minWidth = 280;
+            // Set boundaries based on screen size and orientation - allow complete hiding
+            const minWidth = 0; // Allow complete hiding
             let maxWidth;
             
             if (window.innerWidth >= 769) {
                 // Desktop
                 maxWidth = Math.min(800, window.innerWidth * 0.6);
             } else if (window.innerHeight <= 600 && window.innerWidth > window.innerHeight) {
-                // Mobile landscape
-                maxWidth = Math.min(500, window.innerWidth * 0.5);
+                // Mobile landscape - match desktop proportions
+                maxWidth = Math.min(600, window.innerWidth * 0.6);
             } else {
                 // Mobile portrait
                 maxWidth = Math.min(600, window.innerWidth * 0.8);
             }
             
             if (newWidth >= minWidth && newWidth <= maxWidth) {
-                uiPanel.style.width = newWidth + 'px';
+                if (newWidth <= 10) {
+                    // Hide panel completely when very small
+                    uiPanel.classList.add('hidden');
+                    uiPanel.style.width = '0px';
+                } else {
+                    uiPanel.classList.remove('hidden');
+                    uiPanel.style.width = newWidth + 'px';
+                }
             }
         }
 
@@ -5709,23 +5675,30 @@ and may every step beyond this courtyard bring you strength, wonder, and joy.</s
             const deltaX = e.touches[0].clientX - startX;
             const newWidth = startWidth - deltaX;
             
-            // Set boundaries based on screen size and orientation
-            const minWidth = 280;
+            // Set boundaries based on screen size and orientation - allow complete hiding
+            const minWidth = 0; // Allow complete hiding
             let maxWidth;
             
             if (window.innerWidth >= 769) {
                 // Desktop
                 maxWidth = Math.min(800, window.innerWidth * 0.6);
             } else if (window.innerHeight <= 600 && window.innerWidth > window.innerHeight) {
-                // Mobile landscape
-                maxWidth = Math.min(500, window.innerWidth * 0.5);
+                // Mobile landscape - match desktop proportions
+                maxWidth = Math.min(600, window.innerWidth * 0.6);
             } else {
                 // Mobile portrait
                 maxWidth = Math.min(600, window.innerWidth * 0.8);
             }
             
             if (newWidth >= minWidth && newWidth <= maxWidth) {
-                uiPanel.style.width = newWidth + 'px';
+                if (newWidth <= 10) {
+                    // Hide panel completely when very small
+                    uiPanel.classList.add('hidden');
+                    uiPanel.style.width = '0px';
+                } else {
+                    uiPanel.classList.remove('hidden');
+                    uiPanel.style.width = newWidth + 'px';
+                }
             }
         }
 
@@ -5737,10 +5710,92 @@ and may every step beyond this courtyard bring you strength, wonder, and joy.</s
             document.body.style.userSelect = '';
         }
 
+        // Fullscreen functionality
+        function toggleFullscreen() {
+            const gameContainer = document.getElementById('gameContainer');
+            
+            if (!document.fullscreenElement) {
+                // Enter fullscreen
+                if (gameContainer.requestFullscreen) {
+                    gameContainer.requestFullscreen();
+                } else if (gameContainer.webkitRequestFullscreen) {
+                    gameContainer.webkitRequestFullscreen();
+                } else if (gameContainer.msRequestFullscreen) {
+                    gameContainer.msRequestFullscreen();
+                }
+            } else {
+                // Exit fullscreen
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                } else if (document.msExitFullscreen) {
+                    document.msExitFullscreen();
+                }
+            }
+        }
+
+        // Toggle UI panel visibility
+        function toggleUIPanel() {
+            const uiPanel = document.getElementById('uiPanel');
+            const resizeHandle = document.getElementById('resizeHandle');
+            
+            if (uiPanel.classList.contains('hidden')) {
+                // Show panel
+                uiPanel.classList.remove('hidden');
+                uiPanel.style.width = '380px';
+                resizeHandle.style.display = 'block';
+            } else {
+                // Hide panel
+                uiPanel.classList.add('hidden');
+                uiPanel.style.width = '0px';
+                resizeHandle.style.display = 'none';
+            }
+        }
+
+        // Handle fullscreen change events
+        document.addEventListener('fullscreenchange', handleFullscreenChange);
+        document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+        document.addEventListener('msfullscreenchange', handleFullscreenChange);
+
+        function handleFullscreenChange() {
+            const gameContainer = document.getElementById('gameContainer');
+            const fullscreenBtn = document.querySelector('button[onclick="toggleFullscreen()"]');
+            
+            if (document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement) {
+                gameContainer.classList.add('fullscreen-mode');
+                if (fullscreenBtn) fullscreenBtn.textContent = '📺 退出全屏';
+            } else {
+                gameContainer.classList.remove('fullscreen-mode');
+                if (fullscreenBtn) fullscreenBtn.textContent = '📺 全屏';
+            }
+        }
+
+        // Add double-click to hide/show panel
+        function addPanelToggle() {
+            const sceneArea = document.getElementById('sceneArea');
+            let clickCount = 0;
+            let clickTimer = null;
+
+            sceneArea.addEventListener('click', function() {
+                clickCount++;
+                if (clickCount === 1) {
+                    clickTimer = setTimeout(function() {
+                        clickCount = 0;
+                    }, 300);
+                } else if (clickCount === 2) {
+                    clearTimeout(clickTimer);
+                    clickCount = 0;
+                    toggleUIPanel();
+                }
+            });
+        }
+
         // Start Game
         window.onload = function() {
             initGame();
             initMobileResize();
+            addPanelToggle();
             document.getElementById('commandInput').focus();
         };
 
