@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Hexagram - Ultimate Edition</title>
     <style>
         * {
@@ -1241,16 +1241,76 @@
             height: 0;
             border-left: 60px solid transparent;
             border-right: 60px solid transparent;
+            left: 50%;
+            transform: translateX(-50%);
         }
 
         .hexagram-star::before {
             border-bottom: 104px solid #ffd700;
-            top: 0;
+            top: 0; /* 上三角形从顶部开始 */
         }
 
         .hexagram-star::after {
             border-top: 104px solid #ffd700;
-            bottom: 0;
+            top: 52px; /* 下三角形位置：上三角形高度的1/2，使重心重合 */
+        }
+
+        /* 精确的六芒星设计 - 确保重心重合 */
+        .hexagram-star-precise {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        .hexagram-star-precise::before,
+        .hexagram-star-precise::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-left: 60px solid transparent;
+            border-right: 60px solid transparent;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .hexagram-star-precise::before {
+            border-bottom: 104px solid #ffd700;
+            top: 0; /* 上三角形从顶部开始 */
+        }
+
+        .hexagram-star-precise::after {
+            border-top: 104px solid #ffd700;
+            top: 52px; /* 下三角形位置：上三角形高度的1/2，使重心重合 */
+        }
+
+        /* 数学上精确的六芒星 - 重心完全重合 */
+        .hexagram-star-math {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        .hexagram-star-math::before,
+        .hexagram-star-math::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-left: 60px solid transparent;
+            border-right: 60px solid transparent;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .hexagram-star-math::before {
+            border-bottom: 104px solid #ffd700;
+            top: 0; /* 上三角形从顶部开始 */
+        }
+
+        .hexagram-star-math::after {
+            border-top: 104px solid #ffd700;
+            top: 37.52px; /* 下三角形位置：再微调0.2px，让两个三角形达到终极完美重叠 */
         }
 
         .loading-text {
@@ -1369,6 +1429,71 @@
             height: 100vh !important;
             flex-shrink: 0 !important;
         }
+
+        /* Landscape mode optimization - Scale down for mobile */
+        @media screen and (orientation: landscape) and (max-width: 1024px) {
+            body {
+                overflow: hidden;
+                margin: 0;
+                padding: 0;
+            }
+            
+            /* Wrapper for scaling */
+            #gameContainer {
+                transform-origin: top left;
+                position: absolute;
+                top: 0;
+                left: 0;
+            }
+        }
+        
+        /* Additional mobile landscape scaling class */
+        .mobile-landscape-scaled {
+            transform-origin: center center !important;
+            position: fixed !important;
+            top: 50% !important;
+            left: 50% !important;
+        }
+        
+        /* Portrait mode warning for mobile only - NOT on desktop */
+        @media screen and (orientation: portrait) and (max-width: 768px) and (max-height: 1024px) and (pointer: coarse) {
+            #gameContainer::before {
+                content: "📱 建议横屏体验更佳 / Better in landscape";
+                position: fixed;
+                bottom: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: rgba(0, 0, 0, 0.9);
+                color: #ffd700;
+                padding: 12px 24px;
+                border-radius: 25px;
+                font-size: 14px;
+                z-index: 9999;
+                border: 2px solid #ffd700;
+                box-shadow: 0 4px 20px rgba(255, 215, 0, 0.4);
+                animation: pulseWarning 2s ease-in-out infinite;
+                pointer-events: none;
+            }
+            
+            @keyframes pulseWarning {
+                0%, 100% { opacity: 0.8; transform: translateX(-50%) scale(1); }
+                50% { opacity: 1; transform: translateX(-50%) scale(1.05); }
+            }
+        }
+        
+        /* Ensure no warning on desktop (wider screens or mouse input) */
+        @media screen and (min-width: 1025px), (pointer: fine) {
+            #gameContainer::before {
+                display: none !important;
+            }
+        }
+        
+        /* Hide portrait warning in fullscreen or when landscape button is used */
+        .force-fullscreen::before,
+        .mobile-fullscreen::before,
+        .fullscreen-mode::before {
+            display: none !important;
+        }
     </style>
 </head>
 <body>
@@ -1376,7 +1501,7 @@
     <div id="loadingScreen">
         <div style="text-align: center;">
             <div class="loading-hexagram">
-                <div class="hexagram-star"></div>
+                <div class="hexagram-star-math"></div>
             </div>
             <div class="loading-text">🌟 Hexagram Loading... 🌟</div>
         </div>
@@ -1440,7 +1565,6 @@
                 <button class="action-btn primary" onclick="executeCommand('look')">👁️ Look</button>
                 <button class="action-btn primary" onclick="executeCommand('inventory')">🎒 Inventory</button>
                 <button class="action-btn" onclick="toggleFullscreen()">📺 Fullscreen</button>
-                <button class="action-btn" onclick="testMobileFunctions()" style="background: linear-gradient(135deg, #ff6b6b, #ff8787);">🔧 Test Mobile</button>
                 <button class="action-btn" onclick="showHelp()">❓ Help</button>
                 <button class="action-btn" onclick="refreshRoom()">🔄 Refresh</button>
                 <button class="action-btn" onclick="forceTheaterDisplay()" id="theaterRefreshBtn" style="display: none;">🎭 Fix Theater</button>
@@ -6637,9 +6761,116 @@ Even yourself.`,
             const fullscreenBtn = document.querySelector('button[onclick="toggleFullscreen()"]');
             if (fullscreenBtn) fullscreenBtn.textContent = '📺 Fullscreen';
             
+            // Reapply mobile landscape scaling if needed
+            setTimeout(() => {
+                if (isMobile()) {
+                    applyMobileLandscapeRatio();
+                }
+            }, 100);
+            
             console.log('🚀 ✅ Force fullscreen exited');
         }
         
+        // Landscape mode toggle function
+        let isLandscapeLocked = false;
+        
+        async function toggleLandscapeMode() {
+            console.log('📱 Toggle landscape mode clicked');
+            const landscapeBtn = document.getElementById('landscapeBtn');
+            
+            if (!isLandscapeLocked) {
+                // Try to lock to landscape
+                try {
+                    if (screen.orientation && screen.orientation.lock) {
+                        await screen.orientation.lock('landscape').catch(err => {
+                            console.log('⚠️ Screen orientation lock failed:', err);
+                            // Fallback: just go fullscreen
+                            forceFullscreen();
+                        });
+                        isLandscapeLocked = true;
+                        if (landscapeBtn) landscapeBtn.textContent = '📱 Portrait';
+                        
+                        // Also enter fullscreen for better experience
+                        forceFullscreen();
+                        
+                        console.log('✅ Landscape mode locked');
+                        addMessage('Screen locked to landscape mode', 'success');
+                    } else {
+                        // Browser doesn't support orientation lock, just go fullscreen
+                        console.log('⚠️ Screen orientation API not supported, using fullscreen');
+                        forceFullscreen();
+                        addMessage('Fullscreen mode activated (landscape lock not supported)', 'info');
+                    }
+                } catch (err) {
+                    console.error('❌ Failed to lock landscape:', err);
+                    // Fallback to fullscreen
+                    forceFullscreen();
+                    addMessage('Switched to fullscreen mode', 'info');
+                }
+            } else {
+                // Unlock orientation
+                try {
+                    if (screen.orientation && screen.orientation.unlock) {
+                        screen.orientation.unlock();
+                    }
+                    isLandscapeLocked = false;
+                    if (landscapeBtn) landscapeBtn.textContent = '📱 Landscape';
+                    
+                    // Exit fullscreen too
+                    exitForceFullscreen();
+                    
+                    console.log('✅ Landscape mode unlocked');
+                    addMessage('Screen unlocked from landscape mode', 'success');
+                } catch (err) {
+                    console.error('❌ Failed to unlock orientation:', err);
+                }
+            }
+        }
+        
+        // Auto-detect orientation change and adapt
+        function handleAutoOrientation() {
+            if (isLandscapeLocked) return; // Don't auto-adapt if manually locked
+            
+            const isLandscape = window.innerWidth > window.innerHeight;
+            console.log('📱 Orientation detected:', isLandscape ? 'landscape' : 'portrait');
+            
+            // Apply mobile landscape ratio if needed
+            applyMobileLandscapeRatio();
+        }
+        
+        // Debug: Show current scale info (for development)
+        function showScaleInfo() {
+            if (!isMobile()) {
+                addMessage('This feature is for mobile devices only', 'info');
+                return;
+            }
+            
+            const gameContainer = document.getElementById('gameContainer');
+            const scale = gameContainer.style.transform.match(/scale\(([\d.]+)\)/);
+            const currentScale = scale ? scale[1] : 'none';
+            
+            const info = `
+📱 屏幕信息 / Screen Info:
+• 屏幕尺寸 / Screen: ${window.innerWidth}x${window.innerHeight}
+• 当前缩放 / Scale: ${currentScale}
+• 横屏状态 / Landscape: ${window.innerWidth > window.innerHeight ? 'Yes' : 'No'}
+• 设计尺寸 / Design: 1440x900
+
+💡 提示 / Tips:
+如果显示不全，请在代码中调整 designWidth/designHeight 值
+If content is cut off, adjust designWidth/designHeight in code
+            `;
+            
+            addMessage(info, 'info');
+            console.log('📱 Scale Debug Info:', {
+                screenWidth: window.innerWidth,
+                screenHeight: window.innerHeight,
+                currentScale: currentScale,
+                isLandscape: window.innerWidth > window.innerHeight,
+                containerTransform: gameContainer.style.transform
+            });
+        }
+
         // Enhanced fullscreen toggle with force option
         function toggleFullscreen() {
             console.log('📺 Toggle fullscreen clicked');
@@ -6780,6 +7011,13 @@ Even yourself.`,
             const fullscreenBtn = document.querySelector('button[onclick="toggleFullscreen()"]');
             if (fullscreenBtn) fullscreenBtn.textContent = '📺 Fullscreen';
             
+            // Reapply mobile landscape scaling if needed
+            setTimeout(() => {
+                if (isMobile()) {
+                    applyMobileLandscapeRatio();
+                }
+            }, 100);
+            
             console.log('✅ Mobile fullscreen exited');
         }
 
@@ -6908,58 +7146,88 @@ Even yourself.`,
             toggleFullscreen();
         }
 
-        // Apply 16:10 aspect ratio for mobile landscape (non-fullscreen)
+        // Apply smart scaling for mobile landscape - Mac layout scaled down
         function applyMobileLandscapeRatio() {
             if (!isMobile()) return;
             
             const gameContainer = document.getElementById('gameContainer');
-            if (!gameContainer || gameContainer.classList.contains('mobile-fullscreen')) return;
+            if (!gameContainer) return;
+            
+            // Skip if in fullscreen mode
+            if (gameContainer.classList.contains('mobile-fullscreen') || 
+                gameContainer.classList.contains('force-fullscreen') ||
+                gameContainer.classList.contains('fullscreen-mode')) {
+                return;
+            }
             
             const isLandscape = window.innerWidth > window.innerHeight;
             
             if (isLandscape) {
-                const windowAspectRatio = window.innerWidth / window.innerHeight;
-                const targetAspectRatio = 16 / 10;
-                
-                console.log('📱 Mobile landscape detected - applying 16:10 ratio');
+                console.log('📱 Mobile landscape detected - applying smart scaling');
                 console.log('📱 Window size:', window.innerWidth, 'x', window.innerHeight);
-                console.log('📱 Aspect ratio:', windowAspectRatio, 'vs target:', targetAspectRatio);
                 
-                if (windowAspectRatio > targetAspectRatio) {
-                    const targetWidth = window.innerHeight * targetAspectRatio;
-                    
-                    // Force black background
-                    document.body.style.cssText = 'background: #000000 !important; margin: 0 !important; padding: 0 !important; overflow-x: hidden !important;';
-                    
-                    // Apply strict width constraint
-                    gameContainer.style.maxWidth = targetWidth + 'px';
-                    gameContainer.style.width = targetWidth + 'px';
-                    gameContainer.style.minWidth = targetWidth + 'px';
-                    gameContainer.style.margin = '0 auto';
-                    gameContainer.style.position = 'relative';
-                    gameContainer.style.left = '0';
-                    gameContainer.style.right = '0';
-                    
-                    console.log('📱 ✅ Black bars added! Container width:', targetWidth, 'px');
-                    console.log('📱 ✅ Viewport width:', window.innerWidth, 'px');
-                    console.log('📱 ✅ Black bar width on each side:', (window.innerWidth - targetWidth) / 2, 'px');
-                } else {
-                    document.body.style.background = '#000000';
-                    gameContainer.style.maxWidth = '100vw';
-                    gameContainer.style.width = '100vw';
-                    gameContainer.style.margin = '0';
-                    console.log('📱 Using full width (screen not wider than 16:10)');
-                }
+                // Define desktop design dimensions (typical desktop size)
+                // 💡 如果显示不全或太小，可以调整这两个值：
+                // - 减小值 = 放大显示（例如：1280 x 800）
+                // - 增大值 = 缩小显示（例如：1600 x 1000）
+                const designWidth = 1440;  // Design width for desktop
+                const designHeight = 900;  // Design height for desktop
+                
+                // Calculate scale factors for both dimensions
+                const scaleX = window.innerWidth / designWidth;
+                const scaleY = window.innerHeight / designHeight;
+                
+                // Use the smaller scale to ensure everything fits
+                const scale = Math.min(scaleX, scaleY, 1); // Don't scale up, only down
+                
+                console.log('📱 Scale factors - X:', scaleX.toFixed(3), 'Y:', scaleY.toFixed(3), 'Final:', scale.toFixed(3));
+                
+                // Apply scaling
+                document.body.style.cssText = `
+                    background: #000000 !important; 
+                    margin: 0 !important; 
+                    padding: 0 !important; 
+                    overflow: hidden !important;
+                    display: flex !important;
+                    align-items: center !important;
+                    justify-content: center !important;
+                `;
+                
+                // Set container to design size
+                gameContainer.style.width = designWidth + 'px';
+                gameContainer.style.height = designHeight + 'px';
+                gameContainer.style.maxWidth = designWidth + 'px';
+                gameContainer.style.minWidth = designWidth + 'px';
+                gameContainer.style.maxHeight = designHeight + 'px';
+                gameContainer.style.minHeight = designHeight + 'px';
+                
+                // Apply scale transform
+                gameContainer.style.transform = `scale(${scale})`;
+                gameContainer.style.transformOrigin = 'center center';
+                gameContainer.style.position = 'relative';
+                gameContainer.style.margin = '0';
+                
+                // Add scaled class
+                gameContainer.classList.add('mobile-landscape-scaled');
+                
+                console.log('📱 ✅ Smart scaling applied! Scale:', scale.toFixed(3));
+                console.log('📱 ✅ Container size:', designWidth, 'x', designHeight, 'scaled to fit');
+                
             } else {
-                // Portrait mode - reset
+                // Portrait mode - reset all styles
                 document.body.style.cssText = '';
-                gameContainer.style.maxWidth = '';
+                gameContainer.style.transform = '';
+                gameContainer.style.transformOrigin = '';
                 gameContainer.style.width = '';
+                gameContainer.style.height = '';
+                gameContainer.style.maxWidth = '';
                 gameContainer.style.minWidth = '';
-                gameContainer.style.margin = '';
+                gameContainer.style.maxHeight = '';
+                gameContainer.style.minHeight = '';
                 gameContainer.style.position = '';
-                gameContainer.style.left = '';
-                gameContainer.style.right = '';
+                gameContainer.style.margin = '';
+                gameContainer.classList.remove('mobile-landscape-scaled');
+                
                 console.log('📱 Portrait mode - reset to normal');
             }
         }
@@ -6983,11 +7251,15 @@ Even yourself.`,
             // Add orientation change listener with aspect ratio check
             const handleOrientationWithRatio = () => {
                 handleOrientationChange();
+                handleAutoOrientation();
                 setTimeout(() => applyMobileLandscapeRatio(), 150);
             };
             
             window.addEventListener('orientationchange', handleOrientationWithRatio);
             window.addEventListener('resize', handleOrientationWithRatio);
+            
+            // Initial orientation check
+            handleAutoOrientation();
             
             document.getElementById('commandInput').focus();
             
