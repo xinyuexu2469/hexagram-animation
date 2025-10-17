@@ -807,13 +807,76 @@
             width: 100vw !important;
             height: 100vh !important;
             z-index: 9999 !important;
+            display: flex !important;
+        }
+
+        .fullscreen-mode #sceneArea {
+            flex: 1 !important;
+            height: 100vh !important;
         }
 
         .fullscreen-mode #uiPanel {
-            position: absolute !important;
-            right: 0 !important;
-            top: 0 !important;
+            position: relative !important;
             height: 100vh !important;
+            flex-shrink: 0 !important;
+        }
+
+        /* Mobile landscape fullscreen */
+        .mobile-fullscreen {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            z-index: 9999 !important;
+            display: flex !important;
+            flex-direction: row !important;
+            background: #000 !important;
+        }
+
+        .mobile-fullscreen #sceneArea {
+            flex: 1 !important;
+            height: 100vh !important;
+            position: relative !important;
+        }
+
+        .mobile-fullscreen #uiPanel {
+            height: 100vh !important;
+            flex-shrink: 0 !important;
+            position: relative !important;
+        }
+
+        /* Aspect ratio container for mobile fullscreen */
+        .aspect-container {
+            position: absolute !important;
+            top: 50% !important;
+            left: 50% !important;
+            transform: translate(-50%, -50%) !important;
+            width: 100% !important;
+            height: 100% !important;
+            max-width: 177.78vh !important; /* 16:9 aspect ratio */
+            max-height: 56.25vw !important; /* 16:9 aspect ratio */
+            background: #000 !important;
+        }
+
+        /* Black bars for mobile fullscreen */
+        .mobile-fullscreen::before,
+        .mobile-fullscreen::after {
+            content: '' !important;
+            position: absolute !important;
+            top: 0 !important;
+            width: 50% !important;
+            height: 100% !important;
+            background: #000 !important;
+            z-index: -1 !important;
+        }
+
+        .mobile-fullscreen::before {
+            left: -50% !important;
+        }
+
+        .mobile-fullscreen::after {
+            right: -50% !important;
         }
 
         /* Hide UI panel completely but keep handle */
@@ -1536,6 +1599,7 @@
             addToHistory("💡 Click on scene objects to interact, or enter commands below.", "system-message");
             addToHistory("💡 In the cave, you can double-click the flashlight in your inventory to use it!", "system-message");
             addToHistory("💡 In the forest, you can double-click the bird in your inventory to release it!", "system-message");
+            addToHistory("⚠️ Note: If the Library or Theater appears empty/stuck, please refresh the page (F5).", "system-message");
             
             setTimeout(() => {
                 document.getElementById('loadingScreen').classList.add('hidden');
@@ -1691,73 +1755,22 @@
                     showHexagramCircles();
                 }
             } else if (game.gameState.currentRoom === 'library') {
-                console.log('📚 In library room');
-                console.log('📚 Has shield_of_wisdom:', game.gameState.inventory.includes('shield_of_wisdom'));
-                console.log('📚 Library paths completed:', game.gameState.libraryPaths.size);
-                console.log('📚 objectsLayer exists:', !!document.getElementById('objectsLayer'));
-                console.log('📚 objectsLayer children count:', document.getElementById('objectsLayer')?.children.length || 0);
-                
+                // 图书馆：简单处理，只在没有获得盾牌时显示路径
                 if (!game.gameState.inventory.includes('shield_of_wisdom')) {
-                    console.log('📚 Showing library paths');
-                showLibraryPaths();
-                    
-                    // 验证路径是否成功添加
-                    setTimeout(() => {
-                        const libraryPaths = document.getElementById('libraryPaths');
-                        console.log('📚 Library paths element created:', !!libraryPaths);
-                        if (!libraryPaths) {
-                            console.log('📚 Library paths failed to create, retrying...');
-                            showLibraryPaths();
-                        }
-                    }, 10);
-                } else {
-                    console.log('📚 Shield already obtained, not showing paths');
-                    // 即使已经获得盾牌，也要确保有内容显示
-                    // 检查是否有其他内容，如果没有则强制显示
-                    const objectsLayer = document.getElementById('objectsLayer');
-                    if (objectsLayer && objectsLayer.children.length === 0) {
-                        console.log('📚 Library room empty after shield obtained, forcing display...');
-                        forceLibraryDisplay();
-                    }
+                    showLibraryPaths();
                 }
             } else if (game.gameState.currentRoom === 'theater') {
-                console.log('🎭 In theater room');
-                console.log('🎭 Theater conditions:', {
-                    einstein: game.gameState.theaterTalked.has('einstein'),
-                    marx: game.gameState.theaterTalked.has('marx'),
-                    hasOrb: game.gameState.inventory.includes('orb_of_creation'),
-                    stageActive: theaterStageActive
-                });
-                
-                // 如果已经获得orb，确保orb元素被移除
-                if (game.gameState.inventory.includes('orb_of_creation')) {
-                    console.log('🎭 Orb already obtained, removing any existing orb elements');
-                    const orbDrop = document.getElementById('orbDrop');
-                    if (orbDrop) {
-                        console.log('🎭 Removing existing orb drop element');
-                        orbDrop.remove();
-                    }
-                    const orbItems = document.querySelectorAll('[data-item-id="orb_of_creation"]');
-                    orbItems.forEach(item => {
-                        console.log('🎭 Removing existing orb item element');
-                        item.remove();
-                    });
-                }
-                
-                // 如果已经与两个NPC对话过且没有获得orb，显示舞台
+                // 剧院：处理舞台图标和orb显示
                 if (game.gameState.theaterTalked.has('einstein') && 
-                       game.gameState.theaterTalked.has('marx') &&
-                       !game.gameState.inventory.includes('orb_of_creation') &&
-                       !theaterStageActive) {
-                    console.log('🎭 Theater conditions met, creating stage icon');
-                    createTheaterStageIcon();
-                } else {
-                    console.log('🎭 Theater conditions not met for stage display:', {
-                        einstein: game.gameState.theaterTalked.has('einstein'),
-                        marx: game.gameState.theaterTalked.has('marx'),
-                        hasOrb: game.gameState.inventory.includes('orb_of_creation'),
-                        stageActive: theaterStageActive
-                    });
+                    game.gameState.theaterTalked.has('marx') &&
+                    !game.gameState.inventory.includes('orb_of_creation') &&
+                    !theaterStageActive) {
+                    // 如果房间items中有orb，显示orb；否则显示舞台图标
+                    if (room.items.includes('orb_of_creation')) {
+                        showOrbDrop();
+                    } else {
+                        createTheaterStageIcon();
+                    }
                 }
             } else if (game.gameState.currentRoom === 'stone_circle' && !game.gameState.inventory.includes('stone_of_grit')) {
                 showStoneSlope();
@@ -1784,7 +1797,6 @@
                         }
                     }
                     
-                    console.log(`Creating NPC: ${npcId}`, npcData);
                     const npcEl = createNPC(npcId, npcData);
                     document.getElementById('objectsLayer').appendChild(npcEl);
                 } else {
@@ -1961,7 +1973,7 @@
                 
                 pathEl.onclick = () => {
                     if (!game.gameState.libraryPaths.has(path.command)) {
-                        executeCommand(path.command);
+                        showWisdomPathDetail(path.command);
                     }
                 };
                 
@@ -1993,6 +2005,7 @@
                     showShieldFormation();
                 }, 1000);
             }
+            
         }
 
         // Show Shield Formation
@@ -2037,6 +2050,143 @@
             }, 2500);
         }
 
+        // Check Library Content and Show Refresh Hint if Empty
+        function checkLibraryContent() {
+            if (game.gameState.currentRoom !== 'library') return;
+            
+            const objectsLayer = document.getElementById('objectsLayer');
+            const libraryPaths = document.getElementById('libraryPaths');
+            const hasContent = objectsLayer && objectsLayer.children.length > 0;
+            const hasLibraryPaths = libraryPaths && libraryPaths.children.length > 0;
+            
+            console.log('📚 Library content check:', {
+                hasContent: hasContent,
+                hasLibraryPaths: hasLibraryPaths,
+                objectsLayerChildren: objectsLayer?.children.length || 0,
+                libraryPathsChildren: libraryPaths?.children.length || 0
+            });
+            
+            // If library is empty, show refresh hint
+            if (!hasContent && !hasLibraryPaths) {
+                console.log('📚 Library appears empty, showing refresh hint');
+                showLibraryRefreshHint();
+            }
+        }
+
+        // Show Library Refresh Hint
+        function showLibraryRefreshHint() {
+            // Prevent duplicate hints
+            const existingHint = document.getElementById('libraryRefreshHint');
+            if (existingHint) return;
+            
+            // Create hint container
+            const hint = document.createElement('div');
+            hint.id = 'libraryRefreshHint';
+            hint.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: linear-gradient(135deg, rgba(255, 193, 7, 0.95), rgba(255, 152, 0, 0.95));
+                color: #fff;
+                padding: 30px 40px;
+                border-radius: 15px;
+                border: 3px solid #ffd700;
+                font-size: 18px;
+                font-weight: 600;
+                z-index: 10000;
+                pointer-events: auto;
+                text-align: center;
+                box-shadow: 0 8px 32px rgba(255, 193, 7, 0.4), 0 2px 8px rgba(0,0,0,0.3);
+                backdrop-filter: blur(10px);
+                animation: hintPulse 2s ease-in-out infinite;
+                max-width: 400px;
+                line-height: 1.6;
+            `;
+            
+            // Hint content
+            hint.innerHTML = `
+                <div style="display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 15px;">
+                    <span style="font-size: 32px;">📚</span>
+                    <span style="font-size: 24px; font-weight: bold;">Library Loading Issue</span>
+                </div>
+                <div style="margin-bottom: 20px;">
+                    The library content didn't load properly. Please refresh the page to fix this issue.
+                </div>
+                <div style="display: flex; gap: 15px; justify-content: center;">
+                    <button id="refreshPageBtn" style="
+                        padding: 12px 24px;
+                        background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+                        color: white;
+                        border: none;
+                        border-radius: 10px;
+                        cursor: pointer;
+                        font-size: 16px;
+                        font-weight: bold;
+                        transition: all 0.3s ease;
+                        box-shadow: 0 4px 12px rgba(255, 107, 107, 0.4);
+                    ">🔄 Refresh Page</button>
+                    <button id="closeHintBtn" style="
+                        padding: 12px 24px;
+                        background: linear-gradient(135deg, #4ecdc4, #44a08d);
+                        color: white;
+                        border: none;
+                        border-radius: 10px;
+                        cursor: pointer;
+                        font-size: 16px;
+                        font-weight: bold;
+                        transition: all 0.3s ease;
+                        box-shadow: 0 4px 12px rgba(78, 205, 196, 0.4);
+                    ">❌ Close</button>
+                </div>
+            `;
+            
+            // Add pulse animation
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes hintPulse {
+                    0%, 100% { transform: translate(-50%, -50%) scale(1); }
+                    50% { transform: translate(-50%, -50%) scale(1.02); }
+                }
+            `;
+            document.head.appendChild(style);
+            
+            // Add event listeners
+            const refreshBtn = hint.querySelector('#refreshPageBtn');
+            const closeBtn = hint.querySelector('#closeHintBtn');
+            
+            refreshBtn.onclick = () => {
+                window.location.reload();
+            };
+            
+            refreshBtn.onmouseover = () => {
+                refreshBtn.style.transform = 'scale(1.05)';
+                refreshBtn.style.boxShadow = '0 6px 16px rgba(255, 107, 107, 0.6)';
+            };
+            
+            refreshBtn.onmouseout = () => {
+                refreshBtn.style.transform = 'scale(1)';
+                refreshBtn.style.boxShadow = '0 4px 12px rgba(255, 107, 107, 0.4)';
+            };
+            
+            closeBtn.onclick = () => {
+                hint.remove();
+            };
+            
+            closeBtn.onmouseover = () => {
+                closeBtn.style.transform = 'scale(1.05)';
+                closeBtn.style.boxShadow = '0 6px 16px rgba(78, 205, 196, 0.6)';
+            };
+            
+            closeBtn.onmouseout = () => {
+                closeBtn.style.transform = 'scale(1)';
+                closeBtn.style.boxShadow = '0 4px 12px rgba(78, 205, 196, 0.4)';
+            };
+            
+            // Add to page
+            document.body.appendChild(hint);
+        }
+
         // Show Theater Choices
         function showTheaterChoices() {
             const container = document.getElementById('theaterChoices');
@@ -2069,6 +2219,7 @@
                 };
                 container.appendChild(choiceEl);
             });
+            
         }
 
         // Hide Theater Choices with animation
@@ -2237,16 +2388,17 @@
                 setTimeout(() => {
                     container.style.display = 'none';
                     showOrbDrop();
-                    addToHistory("The stage light converges at your feet. Your vision crystallizes into a radiant orb.\n(Type 'take orb' to claim your reward.)", 'success-message');
-                    // Add orb to room
+                    addToHistory("The stage light converges at your feet. Your vision crystallizes into a radiant orb.\n(Click the orb to claim your reward.)", 'success-message');
+                    // 将orb添加到房间物品列表，确保离开房间再回来时orb仍然存在
                     const room = rooms[game.gameState.currentRoom];
                     if (!room.items.includes('orb_of_creation')) {
                         room.items.push('orb_of_creation');
                     }
+                    // 重置剧院状态
                     theaterStageActive = false;
                     theaterChoice = null;
                     theaterCreationStep = 0;
-                    updateRoomDisplay();
+                    // 不调用updateRoomDisplay，因为showOrbDrop已经创建了可点击的orb
                 }, 3000);
             }
         }
@@ -2294,7 +2446,8 @@
                 clickableOrb.style.transform = 'translate(-50%, -50%)';
                 clickableOrb.style.fontSize = '60px';
                 clickableOrb.style.cursor = 'pointer';
-                clickableOrb.style.zIndex = '15';
+                clickableOrb.style.zIndex = '9999';
+                clickableOrb.style.pointerEvents = 'auto';
                 clickableOrb.textContent = '🔮';
                 clickableOrb.setAttribute('data-item-id', 'orb_of_creation');
                 clickableOrb.title = 'Click to pick up';
@@ -2306,16 +2459,68 @@
                 hint.textContent = '✋ Click to pick up';
                 clickableOrb.appendChild(hint);
                 
-                // 添加点击事件
-                clickableOrb.onclick = (e) => {
+                // 添加点击事件 - 使用addEventListener确保事件正确绑定
+                const handleOrbClick = (e) => {
                     e.stopPropagation();
-                    console.log('🔮 Orb clicked, executing take command');
-                    executeCommand('take orb');
+                    e.preventDefault();
+                    console.log('🔮 Orb clicked, processing pickup');
+                    
+                    // 直接处理拾取逻辑
+                    const result = game.processCommand('take orb');
+                    console.log('🔮 Take orb result:', result);
+                    if (result.type === 'success') {
+                        addToHistory(result.message, 'success-message');
+                        createParticles('magic', 30);
+                        
+                        // 移除orb元素
+                        clickableOrb.remove();
+                        
+                        // 立即更新背包和收集进度
+                        updateInventory();
+                        updateSymbols();
+                        
+                        // 显示成就弹窗
+                        setTimeout(() => {
+                            showSymbolAchievement('orb_of_creation');
+                        }, 500);
+                        
+                        console.log('🔮 Orb picked up, inventory updated:', game.gameState.inventory);
+                    } else {
+                        addToHistory(result.message, 'error-message');
+                        console.log('🔮 Failed to pick up orb:', result.message);
+                    }
+                };
+                
+                // 绑定多种事件确保点击能被捕获
+                clickableOrb.addEventListener('click', handleOrbClick);
+                clickableOrb.addEventListener('mousedown', handleOrbClick);
+                clickableOrb.onclick = handleOrbClick;
+                
+                // 添加鼠标悬停事件用于调试
+                clickableOrb.onmouseenter = () => {
+                    console.log('🔮 Orb mouse enter - element is clickable');
+                };
+                
+                clickableOrb.onmousedown = (e) => {
+                    console.log('🔮 Orb mouse down event triggered');
                 };
                 
                 // 添加到屏幕
-                document.getElementById('objectsLayer').appendChild(clickableOrb);
-                console.log('🔮 Clickable orb item created and added to screen');
+                const objectsLayer = document.getElementById('objectsLayer');
+                if (objectsLayer) {
+                    objectsLayer.appendChild(clickableOrb);
+                    console.log('🔮 Clickable orb item created and added to screen');
+                    console.log('🔮 Orb element details:', {
+                        id: clickableOrb.id,
+                        zIndex: clickableOrb.style.zIndex,
+                        position: clickableOrb.style.position,
+                        left: clickableOrb.style.left,
+                        top: clickableOrb.style.top,
+                        pointerEvents: clickableOrb.style.pointerEvents
+                    });
+                } else {
+                    console.error('🔮 objectsLayer not found!');
+                }
                 
                 // 添加粒子效果
                 createParticles('magic', 20, {
@@ -3822,6 +4027,12 @@ and may every step beyond this courtyard bring you strength, wonder, and joy.</s
                     // 立即更新背包和收集进度显示
                     updateInventory();
                     updateSymbols();
+                    
+                    // 显示成就弹窗
+                    setTimeout(() => {
+                        showSymbolAchievement('seed_of_love');
+                    }, 500);
+                    
                     console.log('Seed picked up, inventory updated:', game.gameState.inventory);
                 } else {
                     addToHistory(result.message, 'error-message');
@@ -4305,6 +4516,12 @@ and may every step beyond this courtyard bring you strength, wonder, and joy.</s
                     // 立即更新背包和收集进度显示
                     updateInventory();
                     updateSymbols();
+                    
+                    // 显示成就弹窗
+                    setTimeout(() => {
+                        showSymbolAchievement('stone_of_grit');
+                    }, 500);
+                    
                     console.log('Inventory updated:', game.gameState.inventory);
                 } else {
                     addToHistory(result.message, 'error-message');
@@ -4670,6 +4887,22 @@ and may every step beyond this courtyard bring you strength, wonder, and joy.</s
             }
             
             const result = game.processCommand(command);
+            
+            // 检测象征物拾取
+            if (result.type === 'success' && command.toLowerCase().startsWith('take ')) {
+                const symbols = ['feather_of_freedom', 'shield_of_wisdom', 'orb_of_creation', 'stone_of_grit', 'seed_of_love'];
+                symbols.forEach(symbol => {
+                    if (command.toLowerCase().includes(symbol.replace(/_/g, ' ')) || 
+                        command.toLowerCase().includes(symbol.split('_').pop())) {
+                        // 检查背包中是否真的有这个象征物（确认拾取成功）
+                        if (game.gameState.inventory.includes(symbol)) {
+                            setTimeout(() => {
+                                showSymbolAchievement(symbol);
+                            }, 500);
+                        }
+                    }
+                });
+            }
             
             if (result.type === 'error') {
                 addToHistory(result.message, 'error-message');
@@ -5516,6 +5749,328 @@ and may every step beyond this courtyard bring you strength, wonder, and joy.</s
             }
         }
 
+        // Show Wisdom Path Detail Modal
+        function showWisdomPathDetail(pathType) {
+            const pathData = {
+                learn: {
+                    emoji: '📚',
+                    title: 'Learning Path',
+                    color: 'linear-gradient(135deg, #4a90e2, #357abd)',
+                    content: `You walk into a corridor shrouded in brilliance. In front of you, multiple paths of knowledge appear:
+
+• [school] School gate — bells echo, scholars walk into halls
+• [expert] Expert lecture — phantom sages speak gently
+• [online] Online resources — countless screens flicker, knowledge flows at your fingertips
+• [book] Tower of books — scrolls piled high, whispering softly
+
+"No matter the form, only by loving and actively seeking to learn can wisdom begin."
+
+You obtain Light of Wisdom [Learning · Understanding].`
+                },
+                live: {
+                    emoji: '🌍',
+                    title: 'Living Path',
+                    color: 'linear-gradient(135deg, #2ecc71, #27ae60)',
+                    content: `A crack opens in the bookshelf, pulling you into an illusion—a miniature world of society and life:
+
+• [market] Bustling market — voices rise and fall in bargaining
+• [workshop] Craftsman's workshop — sparks fly, skills tempered in hands
+• [journey] Journey afar — mountains and strangers await
+• [entertainment] Entertainment world — behind laughter hides joy and sorrow
+• [career] Job market — surging crowds, each soul seeking a place
+
+"With curiosity and critical eyes, fully immersing in society, your experiences will eventually become wisdom."
+
+You obtain Light of Wisdom [Living · Experience].`
+                },
+                dialogue: {
+                    emoji: '💬',
+                    title: 'Dialogue Path',
+                    color: 'linear-gradient(135deg, #e74c3c, #c0392b)',
+                    content: `Voices echo through the corridor. As you approach, phantoms take shape one by one:
+
+• [chat] Friends' chat — cheerful laughter dispels loneliness
+• [talk] Sincere voice — speaking and listening draw closer hearts
+• [debate] Fierce debate — logic and viewpoints clash like swords
+• [co-create] Co-creation — minds intertwine, igniting sparks
+
+"Meeting, exchanging, understanding—social interaction too is an important path toward wisdom."
+
+You obtain Light of Wisdom [Dialogue · Communication].`
+                },
+                reflect: {
+                    emoji: '🤔',
+                    title: 'Reflection Path',
+                    color: 'linear-gradient(135deg, #9b59b6, #8e44ad)',
+                    content: `In the center of the hall appears a water mirror, reflecting your past choices and experiences:
+
+• [mirror] Mirror of reflection — see shadows and regrets of the past
+• [memory] Corridor of memory — old scenes replay, awaiting review
+• [thought] Abyss of thought — inner whispers and unresolved questions
+• [diary] Torn diary pages — true voices hidden in writing
+
+"Only by constantly revising oneself in thought can one continue to grow."
+
+You obtain Light of Wisdom [Thinking · Reflection].`
+                }
+            };
+            
+            const data = pathData[pathType];
+            if (!data) return;
+            
+            // 创建弹窗容器
+            const modal = document.createElement('div');
+            modal.id = 'wisdomPathModal';
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.9);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 10000;
+                animation: fadeIn 0.5s ease;
+            `;
+            
+            // 创建弹窗内容
+            const content = document.createElement('div');
+            content.style.cssText = `
+                background: ${data.color};
+                padding: 40px;
+                border-radius: 20px;
+                max-width: 700px;
+                width: 90%;
+                max-height: 80vh;
+                overflow-y: auto;
+                box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+                text-align: center;
+                animation: scaleIn 0.5s ease;
+                border: 3px solid rgba(255, 255, 255, 0.3);
+            `;
+            
+            content.innerHTML = `
+                <div style="font-size: 80px; margin-bottom: 20px; animation: symbolBounce 1s ease infinite;">${data.emoji}</div>
+                <div style="font-size: 28px; font-weight: bold; color: white; margin-bottom: 25px; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">
+                    ${data.title}
+                </div>
+                <div style="font-size: 16px; color: rgba(255, 255, 255, 0.95); line-height: 1.8; white-space: pre-line; margin-bottom: 30px; text-align: left; background: rgba(0, 0, 0, 0.3); padding: 25px; border-radius: 15px; border: 1px solid rgba(255, 255, 255, 0.2);">
+                    ${data.content.trim()}
+                </div>
+                <div style="display: flex; gap: 15px; justify-content: center;">
+                    <button onclick="document.getElementById('wisdomPathModal').remove()" style="
+                        background: rgba(255, 255, 255, 0.9);
+                        color: #333;
+                        border: none;
+                        padding: 15px 30px;
+                        border-radius: 25px;
+                        font-size: 16px;
+                        font-weight: bold;
+                        cursor: pointer;
+                        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+                        transition: all 0.3s ease;
+                    " onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 6px 20px rgba(0, 0, 0, 0.4)';" onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 4px 15px rgba(0, 0, 0, 0.3)';">
+                        ✨ Close
+                    </button>
+                    <button onclick="document.getElementById('wisdomPathModal').remove(); executeCommand('${pathType}');" style="
+                        background: rgba(255, 215, 0, 0.9);
+                        color: #333;
+                        border: none;
+                        padding: 15px 30px;
+                        border-radius: 25px;
+                        font-size: 16px;
+                        font-weight: bold;
+                        cursor: pointer;
+                        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+                        transition: all 0.3s ease;
+                    " onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 6px 20px rgba(0, 0, 0, 0.4)';" onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 4px 15px rgba(0, 0, 0, 0.3)';">
+                        🚀 Experience Path
+                    </button>
+                </div>
+            `;
+            
+            modal.appendChild(content);
+            document.body.appendChild(modal);
+            
+            // 添加动画样式
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes fadeIn {
+                    from { opacity: 0; }
+                    to { opacity: 1; }
+                }
+                @keyframes scaleIn {
+                    from { transform: scale(0.8); opacity: 0; }
+                    to { transform: scale(1); opacity: 1; }
+                }
+                @keyframes symbolBounce {
+                    0%, 100% { transform: translateY(0); }
+                    50% { transform: translateY(-10px); }
+                }
+            `;
+            document.head.appendChild(style);
+            
+            // 创建粒子效果
+            for (let i = 0; i < 2; i++) {
+                setTimeout(() => {
+                    createParticles('star', 30);
+                }, i * 200);
+            }
+        }
+
+        // Show Symbol Achievement Modal
+        function showSymbolAchievement(symbolType) {
+            const symbolData = {
+                feather_of_freedom: {
+                    emoji: '🪶',
+                    title: 'You have obtained the Feather of Freedom!',
+                    message: `Do not be afraid to try.
+Not every door is locked, and not every window is closed.
+There will always be new strength, warmth, support, and wonder waiting in places you have not yet seen.
+They are outside the doors, in the wind, under the sun—waiting only for you to step out bravely.
+Do not remain trapped in the past, nor in rigid beliefs.
+When you push open the window, when you step out the door, freedom and hope will walk with you.`,
+                    color: 'linear-gradient(135deg, #4ecdc4, #44a08d)'
+                },
+                shield_of_wisdom: {
+                    emoji: '🛡️',
+                    title: 'You have obtained the Shield of Wisdom!',
+                    message: `Learning lets you begin, dialogue broadens your sight, experience gives depth, reflection guides growth.
+You have gathered the four paths of wisdom, and obtained the Shield of Wisdom.
+Whether in smooth or adverse times, you can respond calmly.`,
+                    color: 'linear-gradient(135deg, #667eea, #764ba2)'
+                },
+                orb_of_creation: {
+                    emoji: '🔮',
+                    title: 'You have obtained the Orb of Creation!',
+                    message: `Listen to the truest voice in your heart,
+First create the vision of your own life.
+The aid of the universe
+Will follow your mind.
+The power of belief
+Will make the impossible gradually possible.`,
+                    color: 'linear-gradient(135deg, #f093fb, #f5576c)'
+                },
+                stone_of_grit: {
+                    emoji: '🪨',
+                    title: 'You have obtained the Stone of Grit!',
+                    message: `Everyone is pushing their own stone—work, love, dreams…
+They may all roll down, yet we still must push again.
+The hero who conquers inner despair is more precious than one who conquers the world.
+Perhaps happiness is hidden in the intervals of repetition.
+In these moments, we think, order, and rebuild ourselves,
+So that next time, or in some future facing of the stone,
+We may be a little more skillful, a little lighter, with stronger inner strength.`,
+                    color: 'linear-gradient(135deg, #a8a8a8, #606060)'
+                },
+                seed_of_love: {
+                    emoji: '🌱',
+                    title: 'You have obtained the Seed of Love!',
+                    message: `The meaning of choice does not lie in embracing all possibilities,
+But in choosing one among countless possibilities,
+And bravely accepting the cost of giving up the others.
+
+Only by devoting your life to those you want to guard,
+To care, to love, to listen, to respect,
+Can you possibly receive trust and love,
+And possibly find the meaning and value of living.
+
+These roses may be your lover,
+Or may be friends, vocation, hobby, home,
+Even yourself.`,
+                    color: 'linear-gradient(135deg, #fbc2eb, #a6c1ee)'
+                }
+            };
+            
+            const data = symbolData[symbolType];
+            if (!data) return;
+            
+            // 创建弹窗容器
+            const modal = document.createElement('div');
+            modal.id = 'symbolAchievementModal';
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.85);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 10000;
+                animation: fadeIn 0.5s ease;
+            `;
+            
+            // 创建弹窗内容
+            const content = document.createElement('div');
+            content.style.cssText = `
+                background: ${data.color};
+                padding: 40px;
+                border-radius: 20px;
+                max-width: 600px;
+                width: 90%;
+                box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+                text-align: center;
+                animation: scaleIn 0.5s ease;
+                border: 3px solid rgba(255, 255, 255, 0.3);
+            `;
+            
+            content.innerHTML = `
+                <div style="font-size: 80px; margin-bottom: 20px; animation: symbolBounce 1s ease infinite;">${data.emoji}</div>
+                <div style="font-size: 24px; font-weight: bold; color: white; margin-bottom: 20px; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">
+                    ${data.title}
+                </div>
+                <div style="font-size: 16px; color: rgba(255, 255, 255, 0.95); line-height: 1.8; white-space: pre-line; margin-bottom: 30px; text-align: left; background: rgba(0, 0, 0, 0.2); padding: 20px; border-radius: 10px;">
+                    ${data.message.trim()}
+                </div>
+                <button onclick="document.getElementById('symbolAchievementModal').remove()" style="
+                    background: rgba(255, 255, 255, 0.9);
+                    color: #333;
+                    border: none;
+                    padding: 15px 40px;
+                    border-radius: 30px;
+                    font-size: 18px;
+                    font-weight: bold;
+                    cursor: pointer;
+                    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+                    transition: all 0.3s ease;
+                " onmouseover="this.style.transform='scale(1.1)'; this.style.boxShadow='0 6px 20px rgba(0, 0, 0, 0.4)';" onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 4px 15px rgba(0, 0, 0, 0.3)';">
+                    ✨ Continue Journey
+                </button>
+            `;
+            
+            modal.appendChild(content);
+            document.body.appendChild(modal);
+            
+            // 添加动画样式
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes fadeIn {
+                    from { opacity: 0; }
+                    to { opacity: 1; }
+                }
+                @keyframes scaleIn {
+                    from { transform: scale(0.8); opacity: 0; }
+                    to { transform: scale(1); opacity: 1; }
+                }
+                @keyframes symbolBounce {
+                    0%, 100% { transform: translateY(0); }
+                    50% { transform: translateY(-10px); }
+                }
+            `;
+            document.head.appendChild(style);
+            
+            // 创建粒子效果
+            for (let i = 0; i < 3; i++) {
+                setTimeout(() => {
+                    createParticles('star', 50);
+                }, i * 300);
+            }
+        }
+
         // Show Victory Screen
         function showVictoryScreen(message) {
             // Massive particle celebration
@@ -5736,28 +6291,82 @@ and may every step beyond this courtyard bring you strength, wonder, and joy.</s
             document.body.style.userSelect = '';
         }
 
+        // Device detection
+        function isMobile() {
+            return window.innerWidth <= 768 || /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        }
+
         // Fullscreen functionality
         function toggleFullscreen() {
             const gameContainer = document.getElementById('gameContainer');
             
-            if (!document.fullscreenElement) {
+            if (!document.fullscreenElement && !gameContainer.classList.contains('mobile-fullscreen')) {
                 // Enter fullscreen
-                if (gameContainer.requestFullscreen) {
-                    gameContainer.requestFullscreen();
-                } else if (gameContainer.webkitRequestFullscreen) {
-                    gameContainer.webkitRequestFullscreen();
-                } else if (gameContainer.msRequestFullscreen) {
-                    gameContainer.msRequestFullscreen();
+                if (isMobile()) {
+                    // Mobile: Use custom fullscreen with landscape orientation
+                    enterMobileFullscreen();
+                } else {
+                    // Desktop: Use browser fullscreen API
+                    if (gameContainer.requestFullscreen) {
+                        gameContainer.requestFullscreen();
+                    } else if (gameContainer.webkitRequestFullscreen) {
+                        gameContainer.webkitRequestFullscreen();
+                    } else if (gameContainer.msRequestFullscreen) {
+                        gameContainer.msRequestFullscreen();
+                    }
                 }
             } else {
                 // Exit fullscreen
-                if (document.exitFullscreen) {
+                if (gameContainer.classList.contains('mobile-fullscreen')) {
+                    exitMobileFullscreen();
+                } else if (document.exitFullscreen) {
                     document.exitFullscreen();
                 } else if (document.webkitExitFullscreen) {
                     document.webkitExitFullscreen();
                 } else if (document.msExitFullscreen) {
                     document.msExitFullscreen();
                 }
+            }
+        }
+
+        // Mobile fullscreen functions
+        function enterMobileFullscreen() {
+            const gameContainer = document.getElementById('gameContainer');
+            
+            // Lock orientation to landscape
+            if (screen.orientation && screen.orientation.lock) {
+                screen.orientation.lock('landscape').catch(err => {
+                    console.log('Orientation lock failed:', err);
+                });
+            }
+            
+            // Apply mobile fullscreen class
+            gameContainer.classList.add('mobile-fullscreen');
+            
+            // Hide browser UI
+            document.body.style.overflow = 'hidden';
+            
+            // Force landscape layout
+            const sceneArea = document.getElementById('sceneArea');
+            if (sceneArea) {
+                sceneArea.style.position = 'relative';
+                sceneArea.style.width = '100%';
+                sceneArea.style.height = '100%';
+            }
+        }
+
+        function exitMobileFullscreen() {
+            const gameContainer = document.getElementById('gameContainer');
+            
+            // Remove mobile fullscreen class
+            gameContainer.classList.remove('mobile-fullscreen');
+            
+            // Restore browser UI
+            document.body.style.overflow = '';
+            
+            // Unlock orientation
+            if (screen.orientation && screen.orientation.unlock) {
+                screen.orientation.unlock();
             }
         }
 
@@ -5784,11 +6393,22 @@ and may every step beyond this courtyard bring you strength, wonder, and joy.</s
             const gameContainer = document.getElementById('gameContainer');
             const fullscreenBtn = document.querySelector('button[onclick="toggleFullscreen()"]');
             
-            if (document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement) {
-                gameContainer.classList.add('fullscreen-mode');
+            const isFullscreen = document.fullscreenElement || 
+                               document.webkitFullscreenElement || 
+                               document.msFullscreenElement ||
+                               gameContainer.classList.contains('mobile-fullscreen');
+            
+            if (isFullscreen) {
+                if (gameContainer.classList.contains('mobile-fullscreen')) {
+                    // Mobile fullscreen mode
+                    gameContainer.classList.add('mobile-fullscreen');
+                } else {
+                    // Desktop fullscreen mode
+                    gameContainer.classList.add('fullscreen-mode');
+                }
                 if (fullscreenBtn) fullscreenBtn.textContent = '📺 Exit Fullscreen';
             } else {
-                gameContainer.classList.remove('fullscreen-mode');
+                gameContainer.classList.remove('fullscreen-mode', 'mobile-fullscreen');
                 if (fullscreenBtn) fullscreenBtn.textContent = '📺 Fullscreen';
             }
         }
@@ -5813,11 +6433,34 @@ and may every step beyond this courtyard bring you strength, wonder, and joy.</s
             });
         }
 
+        // Handle orientation change
+        function handleOrientationChange() {
+            const gameContainer = document.getElementById('gameContainer');
+            
+            if (gameContainer.classList.contains('mobile-fullscreen')) {
+                // Re-enter mobile fullscreen to adjust layout
+                setTimeout(() => {
+                    if (window.orientation === 90 || window.orientation === -90) {
+                        // Landscape orientation
+                        gameContainer.classList.add('mobile-fullscreen');
+                    } else {
+                        // Portrait orientation - exit fullscreen
+                        exitMobileFullscreen();
+                    }
+                }, 100);
+            }
+        }
+
         // Start Game
         window.onload = function() {
             initGame();
             initMobileResize();
             addPanelToggle();
+            
+            // Add orientation change listener
+            window.addEventListener('orientationchange', handleOrientationChange);
+            window.addEventListener('resize', handleOrientationChange);
+            
             document.getElementById('commandInput').focus();
         };
 
