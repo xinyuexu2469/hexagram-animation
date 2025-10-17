@@ -215,6 +215,11 @@
             to { opacity: 1; }
         }
 
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-8px); }
+        }
+
         /* Hexagram Disk - 6 circles */
         #hexagramDisk {
             position: absolute;
@@ -697,6 +702,14 @@
             cursor: ew-resize;
             display: block;
             z-index: 10;
+            touch-action: none;
+            pointer-events: auto;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
             border-radius: 8px 0 0 8px;
             box-shadow: -2px 0 10px rgba(255, 215, 0, 0.5);
             transition: all 0.3s ease;
@@ -729,109 +742,70 @@
             max-width: 80vw;
         }
 
-        /* Landscape mode for mobile - match desktop proportions */
+        /* Landscape mode for mobile - USE DESKTOP STYLES (exact same as Mac) */
         @media (max-height: 600px) and (orientation: landscape) {
-            #uiPanel {
-                min-width: 0px; /* Allow complete hiding */
-                max-width: 60vw; /* Match desktop max width */
-                width: 380px; /* Default desktop width */
-            }
+            /* Keep all desktop styles unchanged for identical display */
+            /* Panel width remains 380px like desktop */
+            /* All font sizes and spacing remain the same as desktop */
+            /* This ensures mobile landscape looks exactly like Mac, just scaled */
             
+            /* Only adjust container to fit in viewport */
             #gameContainer {
-                height: 100vh;
+                height: 100vh !important;
             }
             
-            #sceneArea {
-                flex: 1;
-            }
-            
-            /* Optimize UI elements for landscape */
-            #inventory {
-                margin-bottom: 12px;
-            }
-            
-            #quickActions {
-                grid-template-columns: repeat(3, 1fr);
-                gap: 6px;
-                margin-bottom: 12px;
-            }
-            
-            .action-btn {
-                padding: 8px;
-                font-size: 11px;
-            }
-            
-            #commandHistory {
-                max-height: 200px;
-                margin-bottom: 12px;
-            }
-            
-            .command-entry {
-                margin: 4px 0;
-                padding: 6px;
-                font-size: 11px;
-            }
-            
-            #commandInput {
-                padding: 8px;
-                font-size: 12px;
-                margin-bottom: 6px;
-            }
-            
-            #inventory h3 {
-                font-size: 1em;
-                margin-bottom: 8px;
-                padding-bottom: 4px;
-            }
-            
-            .inventory-item {
-                padding: 8px;
-                margin: 4px 0;
-                font-size: 12px;
-            }
-            
-            .inventory-item-icon {
-                font-size: 18px;
-            }
-            
-            .inventory-item-name {
-                font-size: 12px;
+            /* Keep UI panel at desktop width */
+            #uiPanel {
+                width: 380px !important;
+                min-width: 280px !important;
+                max-width: 60vw !important; /* Prevent overflow on small screens */
             }
         }
 
-        /* Fullscreen mode styles */
+        /* Fullscreen mode styles - when documentElement is fullscreen */
         .fullscreen-mode {
             position: fixed !important;
             top: 0 !important;
             left: 0 !important;
             width: 100vw !important;
             height: 100vh !important;
-            z-index: 9999 !important;
             display: flex !important;
+            /* Now modals with fixed positioning will work correctly! */
         }
 
         .fullscreen-mode #sceneArea {
             flex: 1 !important;
             height: 100vh !important;
+            z-index: 1 !important; /* Keep scene below modals */
         }
 
         .fullscreen-mode #uiPanel {
             position: relative !important;
             height: 100vh !important;
             flex-shrink: 0 !important;
+            z-index: 1 !important; /* Keep UI panel below modals */
         }
 
-        /* Mobile landscape fullscreen */
+        /* CRITICAL: Ensure all modals appear ABOVE game content in fullscreen */
+        .fullscreen-mode #dialogOverlay,
+        .fullscreen-mode #dialogModal,
+        #dialogOverlay,
+        #dialogModal {
+            z-index: 9999999 !important;
+            position: fixed !important;
+        }
+
+        /* Mobile landscape fullscreen - NO Z-INDEX to avoid stacking context issues */
         .mobile-fullscreen {
             position: fixed !important;
             top: 0 !important;
             left: 0 !important;
             width: 100vw !important;
             height: 100vh !important;
-            z-index: 9999 !important;
             display: flex !important;
             flex-direction: row !important;
             background: #000 !important;
+            /* z-index removed to allow modals to appear above */
         }
 
         .mobile-fullscreen #sceneArea {
@@ -846,7 +820,7 @@
             position: relative !important;
         }
 
-        /* Aspect ratio container for mobile fullscreen */
+        /* Aspect ratio container for mobile fullscreen - 16:10 like desktop */
         .aspect-container {
             position: absolute !important;
             top: 50% !important;
@@ -854,9 +828,16 @@
             transform: translate(-50%, -50%) !important;
             width: 100% !important;
             height: 100% !important;
-            max-width: 177.78vh !important; /* 16:9 aspect ratio */
-            max-height: 56.25vw !important; /* 16:9 aspect ratio */
+            max-width: 160vh !important; /* 16:10 aspect ratio */
+            max-height: 62.5vw !important; /* 16:10 aspect ratio */
             background: #000 !important;
+        }
+        
+        /* Force 16:10 aspect ratio for mobile fullscreen with black bars */
+        .mobile-fullscreen #gameContainer {
+            max-width: 160vh !important;
+            max-height: 62.5vw !important;
+            margin: 0 auto !important;
         }
 
         /* Black bars for mobile fullscreen */
@@ -1070,9 +1051,9 @@
             border: 4px solid #ffd700;
             border-radius: 20px;
             padding: 28px;
-            max-width: 580px;
-            width: 85%;
-            z-index: 1000;
+            max-width: 450px;
+            width: 70%;
+            z-index: 10001;
             box-shadow: 0 0 60px rgba(255, 215, 0, 0.6);
             animation: modalEntry 0.5s ease;
         }
@@ -1090,7 +1071,7 @@
             right: 0;
             bottom: 0;
             background: rgba(0, 0, 0, 0.85);
-            z-index: 999;
+            z-index: 10000;
             backdrop-filter: blur(8px);
         }
 
@@ -1350,6 +1331,44 @@
             background: linear-gradient(180deg, #ffd700, #ffed4e);
             border-radius: 10px;
         }
+
+        /* Force fullscreen mode - NO Z-INDEX to avoid stacking context issues */
+        .force-fullscreen {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            background: #1a1a2e !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            border: none !important;
+            outline: none !important;
+            display: flex !important;
+            /* z-index removed - this is the KEY fix! */
+        }
+
+        /* CRITICAL: Ensure all modals have high z-index and are outside gameContainer */
+        #symbolAchievementModal,
+        #wisdomPathModal,
+        #dialogOverlay,
+        #dialogModal,
+        #libraryRefreshHint,
+        #guideFinalDialog {
+            z-index: 999999 !important;
+            position: fixed !important;
+        }
+
+        .force-fullscreen #sceneArea {
+            flex: 1 !important;
+            height: 100vh !important;
+        }
+
+        .force-fullscreen #uiPanel {
+            position: relative !important;
+            height: 100vh !important;
+            flex-shrink: 0 !important;
+        }
     </style>
 </head>
 <body>
@@ -1421,6 +1440,7 @@
                 <button class="action-btn primary" onclick="executeCommand('look')">👁️ Look</button>
                 <button class="action-btn primary" onclick="executeCommand('inventory')">🎒 Inventory</button>
                 <button class="action-btn" onclick="toggleFullscreen()">📺 Fullscreen</button>
+                <button class="action-btn" onclick="testMobileFunctions()" style="background: linear-gradient(135deg, #ff6b6b, #ff8787);">🔧 Test Mobile</button>
                 <button class="action-btn" onclick="showHelp()">❓ Help</button>
                 <button class="action-btn" onclick="refreshRoom()">🔄 Refresh</button>
                 <button class="action-btn" onclick="forceTheaterDisplay()" id="theaterRefreshBtn" style="display: none;">🎭 Fix Theater</button>
@@ -1432,23 +1452,59 @@
             <input type="text" id="commandInput" placeholder="💬 Enter command or click scene objects..." 
                    onkeypress="handleKeyPress(event)" autocomplete="off">
         </div>
-    </div>
 
-    <!-- Dialog Modal -->
-    <div id="dialogOverlay" onclick="hideDialog()"></div>
-    <div id="dialogModal">
-        <div class="dialog-header">
-            <div class="dialog-avatar" id="dialogAvatar"></div>
-            <div class="dialog-name" id="dialogName"></div>
-        </div>
-        <div id="dialogContent"></div>
-        <div class="dialog-buttons">
-            <button class="dialog-btn respond" onclick="executeCommand('respond')">💬 Respond</button>
-            <button class="dialog-btn end" onclick="closeDialog()">👋 End</button>
+        <!-- Dialog Modal - MOVED INSIDE gameContainer for fullscreen support -->
+        <div id="dialogOverlay" onclick="hideDialog()" style="z-index: 9999998 !important; position: fixed !important;"></div>
+        <div id="dialogModal" style="z-index: 9999999 !important; position: fixed !important;">
+            <div class="dialog-header">
+                <div class="dialog-avatar" id="dialogAvatar"></div>
+                <div class="dialog-name" id="dialogName"></div>
+            </div>
+            <div id="dialogContent"></div>
+            <div class="dialog-buttons">
+                <button class="dialog-btn respond" onclick="executeCommand('respond')">💬 Respond</button>
+                <button class="dialog-btn end" onclick="closeDialog()">👋 End</button>
+            </div>
         </div>
     </div>
 
     <script src="game.js"></script>
+    <script>
+        // CRITICAL FIX: Override dialog display to force visibility in fullscreen
+        const originalDisplayProperty = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'style');
+        
+        // Enhanced MutationObserver to force modal styles in all fullscreen modes
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+                    const target = mutation.target;
+                    const modalIds = ['dialogModal', 'dialogOverlay', 'symbolAchievementModal', 'wisdomPathModal', 'libraryRefreshHint', 'guideFinalDialog'];
+                    
+                    if (modalIds.includes(target.id)) {
+                        // Force critical styles for all modals
+                        if (target.style.display === 'block' || target.style.display === 'flex') {
+                            target.style.position = 'fixed';
+                            target.style.zIndex = '999999';
+                            console.log('✅ Modal displayed:', target.id, 'z-index:', target.style.zIndex);
+                        }
+                    }
+                }
+            });
+        });
+        
+        // Start observing when DOM is ready
+        window.addEventListener('DOMContentLoaded', () => {
+            const dialogModal = document.getElementById('dialogModal');
+            const dialogOverlay = document.getElementById('dialogOverlay');
+            
+            if (dialogModal) {
+                observer.observe(dialogModal, { attributes: true, attributeFilter: ['style'] });
+            }
+            if (dialogOverlay) {
+                observer.observe(dialogOverlay, { attributes: true, attributeFilter: ['style'] });
+            }
+        });
+    </script>
     <script>
         // Initialize game
         let game = new HexagramGame();
@@ -1488,7 +1544,6 @@
             stone_of_grit: { emoji: '🗿', position: { x: 50, y: 72 } },
             seed_of_love: { emoji: '🌱', position: { x: 50, y: 75 } },
             // hexagram_disk 不应该作为掉落物品显示
-            '4 paths of wisdom': { emoji: '📖', position: { x: 50, y: 56 }, hint: 'Click to explore the paths of wisdom' },
             'big stone': { emoji: '🗿', position: { x: 50, y: 68 }, hint: 'Click to push the boulder' },
             stage: { emoji: '🎭', position: { x: 50, y: 65 }, hint: 'Click to ascend the stage' }
         };
@@ -1604,6 +1659,12 @@
             setTimeout(() => {
                 document.getElementById('loadingScreen').classList.add('hidden');
             }, 2000);
+        }
+
+        // Refresh Room - Simply reload the page
+        function refreshRoom() {
+            console.log('🔄 Refreshing page...');
+            location.reload();
         }
 
         // Reset Game
@@ -1755,16 +1816,17 @@
                     showHexagramCircles();
                 }
             } else if (game.gameState.currentRoom === 'library') {
-                // 图书馆：简单处理，只在没有获得盾牌时显示路径
-                if (!game.gameState.inventory.includes('shield_of_wisdom')) {
-                    showLibraryPaths();
-                }
+                // 图书馆：总是显示智慧路径图标
+                showLibraryPaths();
             } else if (game.gameState.currentRoom === 'theater') {
-                // 剧院：处理舞台图标和orb显示
+                // 剧院:处理舞台图标和orb显示
+                createTheaterNPCButtons();
+                
+                // 如果已经与两个NPC对话过且没有获得orb，显示舞台图标
                 if (game.gameState.theaterTalked.has('einstein') && 
-                    game.gameState.theaterTalked.has('marx') &&
-                    !game.gameState.inventory.includes('orb_of_creation') &&
-                    !theaterStageActive) {
+                       game.gameState.theaterTalked.has('marx') &&
+                       !game.gameState.inventory.includes('orb_of_creation') &&
+                       !theaterStageActive) {
                     // 如果房间items中有orb，显示orb；否则显示舞台图标
                     if (room.items.includes('orb_of_creation')) {
                         showOrbDrop();
@@ -1772,6 +1834,7 @@
                         createTheaterStageIcon();
                     }
                 }
+                // 如果orb已经被拾取，不显示任何orb相关图标
             } else if (game.gameState.currentRoom === 'stone_circle' && !game.gameState.inventory.includes('stone_of_grit')) {
                 showStoneSlope();
             } else if (game.gameState.currentRoom === 'garden') {
@@ -1795,6 +1858,12 @@
                         if (npcId === 'red' || npcId === 'white' || npcId === 'purple') {
                             return;
                         }
+                    }
+                    
+                    // 特殊处理：剧院中的NPC，使用createTheaterNPCButtons创建
+                    if (game.gameState.currentRoom === 'theater') {
+                        // 跳过剧院NPC的创建，因为使用createTheaterNPCButtons
+                        return;
                     }
                     
                     const npcEl = createNPC(npcId, npcData);
@@ -1959,11 +2028,12 @@
                 pathEl.style.background = game.gameState.libraryPaths.has(path.command) 
                     ? 'rgba(255, 215, 0, 0.2)' 
                     : 'rgba(0, 0, 0, 0.6)';
-                pathEl.style.boxShadow = '0 0 20px rgba(255, 215, 0, 0.4)';
+                pathEl.style.boxShadow = game.gameState.libraryPaths.has(path.command)
+                    ? '0 0 20px rgba(255, 215, 0, 0.6)'
+                    : '0 0 20px rgba(255, 215, 0, 0.4)';
                 
                 if (game.gameState.libraryPaths.has(path.command)) {
                     pathEl.classList.add('completed');
-                    pathEl.style.boxShadow = '0 0 20px rgba(255, 215, 0, 0.6)';
                 }
                 
                 pathEl.innerHTML = `
@@ -1972,22 +2042,24 @@
                 `;
                 
                 pathEl.onclick = () => {
-                    if (!game.gameState.libraryPaths.has(path.command)) {
-                        showWisdomPathDetail(path.command);
-                    }
+                    showWisdomPathDetail(path.command);
                 };
                 
                 pathEl.onmouseover = () => {
-                    if (!game.gameState.libraryPaths.has(path.command)) {
-                        pathEl.style.transform = 'scale(1.05)';
+                    pathEl.style.transform = 'scale(1.05)';
+                    if (game.gameState.libraryPaths.has(path.command)) {
+                        pathEl.style.boxShadow = '0 0 30px rgba(255, 215, 0, 0.9)';
+                    } else {
                         pathEl.style.boxShadow = '0 0 25px rgba(255, 215, 0, 0.8)';
                     }
                 };
                 
                 pathEl.onmouseout = () => {
-                    if (!game.gameState.libraryPaths.has(path.command)) {
-                        pathEl.style.transform = 'scale(1)';
-                        pathEl.style.boxShadow = 'none';
+                    pathEl.style.transform = 'scale(1)';
+                    if (game.gameState.libraryPaths.has(path.command)) {
+                        pathEl.style.boxShadow = '0 0 20px rgba(255, 215, 0, 0.6)';
+                    } else {
+                        pathEl.style.boxShadow = '0 0 20px rgba(255, 215, 0, 0.4)';
                     }
                 };
                 
@@ -2083,25 +2155,25 @@
             const hint = document.createElement('div');
             hint.id = 'libraryRefreshHint';
             hint.style.cssText = `
-                position: fixed;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                background: linear-gradient(135deg, rgba(255, 193, 7, 0.95), rgba(255, 152, 0, 0.95));
-                color: #fff;
-                padding: 30px 40px;
-                border-radius: 15px;
-                border: 3px solid #ffd700;
-                font-size: 18px;
-                font-weight: 600;
-                z-index: 10000;
-                pointer-events: auto;
-                text-align: center;
-                box-shadow: 0 8px 32px rgba(255, 193, 7, 0.4), 0 2px 8px rgba(0,0,0,0.3);
-                backdrop-filter: blur(10px);
+                position: fixed !important;
+                top: 50% !important;
+                left: 50% !important;
+                transform: translate(-50%, -50%) !important;
+                background: linear-gradient(135deg, rgba(255, 193, 7, 0.95), rgba(255, 152, 0, 0.95)) !important;
+                color: #fff !important;
+                padding: 30px 40px !important;
+                border-radius: 15px !important;
+                border: 3px solid #ffd700 !important;
+                font-size: 18px !important;
+                font-weight: 600 !important;
+                z-index: 999999 !important;
+                pointer-events: auto !important;
+                text-align: center !important;
+                box-shadow: 0 8px 32px rgba(255, 193, 7, 0.4), 0 2px 8px rgba(0,0,0,0.3) !important;
+                backdrop-filter: blur(10px) !important;
                 animation: hintPulse 2s ease-in-out infinite;
-                max-width: 400px;
-                line-height: 1.6;
+                max-width: 400px !important;
+                line-height: 1.6 !important;
             `;
             
             // Hint content
@@ -2184,7 +2256,8 @@
             };
             
             // Add to page
-            document.body.appendChild(hint);
+            // CRITICAL: Append to gameContainer for fullscreen support
+            document.getElementById('gameContainer').appendChild(hint);
         }
 
         // Show Theater Choices
@@ -2407,6 +2480,12 @@
         function showOrbDrop() {
             console.log('🔮 Creating orb drop animation and clickable item');
             
+            // 如果orb已经在背包里，不显示
+            if (game.gameState.inventory.includes('orb_of_creation')) {
+                console.log('🔮 Orb already in inventory, not showing orb drop');
+                return;
+            }
+            
             // 创建动画效果的orb
             const orb = document.createElement('div');
             orb.style.position = 'absolute';
@@ -2509,7 +2588,7 @@
                 const objectsLayer = document.getElementById('objectsLayer');
                 if (objectsLayer) {
                     objectsLayer.appendChild(clickableOrb);
-                    console.log('🔮 Clickable orb item created and added to screen');
+                console.log('🔮 Clickable orb item created and added to screen');
                     console.log('🔮 Orb element details:', {
                         id: clickableOrb.id,
                         zIndex: clickableOrb.style.zIndex,
@@ -3070,7 +3149,7 @@ Guide: I believe you've gathered everything needed to restore the Hexagram! Try 
             dialog.style.border = '3px solid #ffd700';
             dialog.style.borderRadius = '20px';
             dialog.style.boxShadow = '0 0 30px rgba(255, 215, 0, 0.5)';
-            dialog.style.zIndex = '1000';
+            dialog.style.zIndex = '999999';
             dialog.style.display = 'flex';
             dialog.style.flexDirection = 'column';
             dialog.style.overflow = 'hidden';
@@ -3220,7 +3299,8 @@ Guide: I believe you've gathered everything needed to restore the Hexagram! Try 
             }
             
             dialog.appendChild(buttonArea);
-            document.body.appendChild(dialog);
+            // CRITICAL: Append to gameContainer for fullscreen support
+            document.getElementById('gameContainer').appendChild(dialog);
         }
         
         // Update Hexagram Circles for Repair - 对话框结束后添加交互
@@ -4307,7 +4387,8 @@ and may every step beyond this courtyard bring you strength, wonder, and joy.</s
             }
             
             // 添加到页面
-            document.body.appendChild(hint);
+            // CRITICAL: Append to gameContainer for fullscreen support
+            document.getElementById('gameContainer').appendChild(hint);
             
             // 监听释放小鸟的操作，完成后自动关闭
             const checkBirdReleased = setInterval(() => {
@@ -4444,7 +4525,8 @@ and may every step beyond this courtyard bring you strength, wonder, and joy.</s
             }
             
             // 添加到页面
-            document.body.appendChild(hint);
+            // CRITICAL: Append to gameContainer for fullscreen support
+            document.getElementById('gameContainer').appendChild(hint);
             
             // 监听手电筒使用的操作，完成后自动关闭
             const checkTorchLit = setInterval(() => {
@@ -4540,6 +4622,7 @@ and may every step beyond this courtyard bring you strength, wonder, and joy.</s
             });
             
             // 添加到页面
+            // CRITICAL: Append to gameContainer for fullscreen support (but stone uses fixed positioning)
             document.body.appendChild(stone);
             createParticles('magic', 50);
             
@@ -4760,8 +4843,9 @@ and may every step beyond this courtyard bring you strength, wonder, and joy.</s
             }).join('');
         }
 
-        // Dialog Functions
+        // Dialog Functions - ENHANCED with force display
         function showDialog(npcId, isConversationEnd = false) {
+            console.log('🔥 showDialog called for:', npcId);
             const modal = document.getElementById('dialogModal');
             const overlay = document.getElementById('dialogOverlay');
             const npcData = npcVisuals[npcId];
@@ -4785,8 +4869,40 @@ and may every step beyond this courtyard bring you strength, wonder, and joy.</s
                 endBtn.style.display = 'block';
             }
             
-            modal.style.display = 'block';
-            overlay.style.display = 'block';
+            // Now that documentElement goes fullscreen (not gameContainer), 
+            // fixed positioning works correctly! Use super high z-index!
+            overlay.style.cssText = `
+                display: block !important;
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                width: 100% !important;
+                height: 100% !important;
+                background: rgba(0, 0, 0, 0.8) !important;
+                z-index: 9999998 !important;
+                opacity: 1 !important;
+                visibility: visible !important;
+            `;
+            
+            modal.style.cssText = `
+                display: block !important;
+                position: fixed !important;
+                left: 50% !important;
+                top: 50% !important;
+                transform: translate(-50%, -50%) !important;
+                z-index: 9999999 !important;
+                opacity: 1 !important;
+                visibility: visible !important;
+                background: linear-gradient(135deg, #16213e, #0f1419) !important;
+                padding: 25px !important;
+                border-radius: 20px !important;
+                border: 3px solid #ffd700 !important;
+                box-shadow: 0 0 40px rgba(255, 215, 0, 0.6) !important;
+                min-width: 450px !important;
+                max-width: 90vw !important;
+            `;
+            
+            console.log('✅ Dialog displayed with z-index:', modal.style.zIndex);
             createParticles('magic', 30);
         }
 
@@ -4797,8 +4913,16 @@ and may every step beyond this courtyard bring you strength, wonder, and joy.</s
         }
 
         function closeDialog() {
-            document.getElementById('dialogModal').style.display = 'none';
-            document.getElementById('dialogOverlay').style.display = 'none';
+            console.log('🔥 closeDialog called');
+            const modal = document.getElementById('dialogModal');
+            const overlay = document.getElementById('dialogOverlay');
+            
+            modal.style.display = 'none';
+            modal.style.visibility = 'hidden';
+            overlay.style.display = 'none';
+            overlay.style.visibility = 'hidden';
+            
+            console.log('✅ Dialog closed');
         }
 
         // Command Input
@@ -5394,6 +5518,102 @@ and may every step beyond this courtyard bring you strength, wonder, and joy.</s
             }, 200);
         }
         
+        // 创建剧院NPC按钮
+        function createTheaterNPCButtons() {
+            console.log('🎭 Creating theater NPC buttons');
+            
+            // 清除可能存在的旧按钮
+            const existingButtons = document.querySelectorAll('.theater-npc-button');
+            existingButtons.forEach(button => button.remove());
+            
+            const npcs = [
+                { id: 'einstein', emoji: '👨‍🔬', name: 'Einstein', color: '#4ecdc4', position: { x: 25, y: 70 } },
+                { id: 'marx', emoji: '📚', name: 'Marx', color: '#e74c3c', position: { x: 75, y: 70 } }
+            ];
+            
+            npcs.forEach(npc => {
+                const button = document.createElement('div');
+                button.className = 'theater-npc-button';
+                button.style.cssText = `
+                    position: absolute;
+                    left: ${npc.position.x}%;
+                    top: ${npc.position.y}%;
+                    transform: translate(-50%, -50%);
+                    width: 100px;
+                    height: 100px;
+                    background: linear-gradient(135deg, ${npc.color}, ${npc.color}dd);
+                    border: 4px solid #ffd700;
+                    border-radius: 50%;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    cursor: pointer;
+                    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+                    box-shadow: 
+                        0 0 30px rgba(255, 215, 0, 0.8),
+                        0 0 60px rgba(255, 215, 0, 0.4),
+                        inset 0 0 20px rgba(255, 255, 255, 0.2);
+                    z-index: 20;
+                    backdrop-filter: blur(10px);
+                `;
+                
+                button.innerHTML = `
+                    <div style="
+                        font-size: 40px; 
+                        margin-bottom: 6px;
+                        filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.6));
+                        animation: float 3s ease-in-out infinite;
+                    ">${npc.emoji}</div>
+                    <div style="
+                        font-size: 14px;
+                        font-weight: bold;
+                        color: #ffd700;
+                        text-shadow: 
+                            0 0 6px rgba(0, 0, 0, 0.9),
+                            0 0 12px rgba(255, 215, 0, 0.5);
+                        background: linear-gradient(135deg, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.6));
+                        padding: 4px 8px;
+                        border-radius: 8px;
+                        border: 2px solid #ffd700;
+                        box-shadow: 
+                            0 0 10px rgba(255, 215, 0, 0.4),
+                            inset 0 0 5px rgba(255, 255, 255, 0.1);
+                    ">${npc.name}</div>
+                `;
+                
+                button.onclick = () => {
+                    executeCommand(`talk ${npc.id}`);
+                };
+                
+                button.onmouseover = () => {
+                    button.style.transform = 'translate(-50%, -50%) scale(1.15)';
+                    button.style.boxShadow = `
+                        0 0 40px rgba(255, 215, 0, 1),
+                        0 0 80px rgba(255, 215, 0, 0.6),
+                        inset 0 0 30px rgba(255, 255, 255, 0.3)
+                    `;
+                    button.style.borderColor = '#ffff00';
+                };
+                
+                button.onmouseout = () => {
+                    button.style.transform = 'translate(-50%, -50%) scale(1)';
+                    button.style.boxShadow = `
+                        0 0 30px rgba(255, 215, 0, 0.8),
+                        0 0 60px rgba(255, 215, 0, 0.4),
+                        inset 0 0 20px rgba(255, 255, 255, 0.2)
+                    `;
+                    button.style.borderColor = '#ffd700';
+                };
+                
+                const objectsLayer = document.getElementById('objectsLayer');
+                if (objectsLayer) {
+                    objectsLayer.appendChild(button);
+                    console.log(`🎭 ${npc.name} button added to objectsLayer`);
+                }
+            });
+        }
+
         // 创建剧院舞台图标
         function createTheaterStageIcon() {
             console.log('🎭 Creating theater stage icon');
@@ -5433,76 +5653,8 @@ and may every step beyond this courtyard bring you strength, wonder, and joy.</s
         
         // 刷新房间显示
         function refreshRoom() {
-            console.log('手动刷新房间显示...');
-            const currentRoom = game.gameState.currentRoom;
-            console.log('🔄 Refreshing room:', currentRoom);
-            
-            // 强制清空并重新显示
-            const objectsLayer = document.getElementById('objectsLayer');
-            if (objectsLayer) {
-                objectsLayer.innerHTML = '';
-                console.log('🔄 Cleared objectsLayer');
-            }
-            
-            // 根据房间类型进行特殊处理
-            if (currentRoom === 'library') {
-                console.log('🔄 Library room detected, using forceLibraryDisplay');
-                console.log('🔄 Library state check:', {
-                    hasShield: game.gameState.inventory.includes('shield_of_wisdom'),
-                    pathsCompleted: game.gameState.libraryPaths.size,
-                    shieldPickedUp: game.gameState.shieldPickedUp
-                });
-                forceLibraryDisplay();
-                
-                // 额外的验证和重试
-                setTimeout(() => {
-                    const libraryPaths = document.getElementById('libraryPaths');
-                    if (!libraryPaths) {
-                        console.log('🔄 Library paths still missing after forceLibraryDisplay, retrying...');
-                        showLibraryPaths();
-                    } else {
-                        console.log('🔄 Library paths found after forceLibraryDisplay');
-                    }
-                }, 50);
-            } else if (currentRoom === 'theater') {
-                console.log('🔄 Theater room detected, using forceTheaterDisplay');
-                forceTheaterDisplay();
-                
-                // 额外的剧院舞台图标检查
-                setTimeout(() => {
-                    const shouldHaveStage = game.gameState.theaterTalked.has('einstein') && 
-                                           game.gameState.theaterTalked.has('marx') &&
-                                           !game.gameState.inventory.includes('orb_of_creation') &&
-                                           !theaterStageActive;
-                    
-                    if (shouldHaveStage) {
-                        const existingStage = document.querySelector('[data-item-id="stage"]');
-                        if (!existingStage) {
-                            console.log('🔄 Theater stage icon missing after refresh, creating...');
-                            createTheaterStageIcon();
-                        } else {
-                            console.log('🔄 Theater stage icon found after refresh');
-                        }
-                    }
-                }, 100);
-            } else {
-                console.log('🔄 Using standard updateRoomDisplay');
-                updateRoomDisplay();
-            }
-            
-            // 验证显示结果
-            setTimeout(() => {
-                const objectsLayer = document.getElementById('objectsLayer');
-                const hasContent = objectsLayer && objectsLayer.children.length > 0;
-                console.log('🔄 Refresh result - hasContent:', hasContent, 'children:', objectsLayer?.children.length || 0);
-                
-                if (!hasContent) {
-                    console.log('🔄 Refresh failed, trying validateRoomDisplay');
-                    validateRoomDisplay();
-                }
-            }, 100);
-            
-            addToHistory('🔄 Room refreshed', 'system-message');
+            console.log('🔄 Refreshing page...');
+            location.reload();  // 直接刷新页面
         }
         
         // Force Theater Display
@@ -5527,20 +5679,8 @@ and may every step beyond this courtyard bring you strength, wonder, and joy.</s
                     console.log('🎭 Orb already obtained, not creating orb elements');
                 }
                 
-                // Force create NPCs
-                const room = rooms[game.gameState.currentRoom];
-                console.log('🎭 Theater room NPCs:', room.npcs);
-                room.npcs.forEach(npcId => {
-                    const npcData = npcVisuals[npcId];
-                    if (npcData) {
-                        console.log(`Force creating NPC: ${npcId}`, npcData);
-                        const npcEl = createNPC(npcId, npcData);
-                        objectsLayer.appendChild(npcEl);
-                        console.log(`🎭 NPC ${npcId} added to objectsLayer`);
-                    } else {
-                        console.warn(`🎭 No NPC data found for: ${npcId}`);
-                    }
-                });
+                // Force create NPC buttons
+                createTheaterNPCButtons();
                 
                 // Force create stage icon if conditions are met
                 if (game.gameState.theaterTalked.has('einstein') && 
@@ -5568,14 +5708,8 @@ and may every step beyond this courtyard bring you strength, wonder, and joy.</s
                     
                     if (!hasContent) {
                         console.warn('🎭 Theater still empty, retrying...');
-                        // 再次尝试创建NPCs
-                        room.npcs.forEach(npcId => {
-                            const npcData = npcVisuals[npcId];
-                            if (npcData) {
-                                const npcEl = createNPC(npcId, npcData);
-                                objectsLayer.appendChild(npcEl);
-                            }
-                        });
+                        // 再次尝试创建NPC按钮
+                        createTheaterNPCButtons();
                     }
                 }, 50);
                 
@@ -5629,7 +5763,7 @@ and may every step beyond this courtyard bring you strength, wonder, and joy.</s
                     }
                 });
                 
-                // Force show library paths (always show, even if shield obtained)
+                // Force show library paths (always show)
                 console.log('📚 Calling showLibraryPaths');
                 showLibraryPaths();
                 
@@ -5822,16 +5956,16 @@ You obtain Light of Wisdom [Thinking · Reflection].`
             const modal = document.createElement('div');
             modal.id = 'wisdomPathModal';
             modal.style.cssText = `
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(0, 0, 0, 0.9);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                z-index: 10000;
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                width: 100% !important;
+                height: 100% !important;
+                background: rgba(0, 0, 0, 0.9) !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                z-index: 999999 !important;
                 animation: fadeIn 0.5s ease;
             `;
             
@@ -5892,7 +6026,8 @@ You obtain Light of Wisdom [Thinking · Reflection].`
             `;
             
             modal.appendChild(content);
-            document.body.appendChild(modal);
+            // CRITICAL: Append to gameContainer for fullscreen support
+            document.getElementById('gameContainer').appendChild(modal);
             
             // 添加动画样式
             const style = document.createElement('style');
@@ -5991,16 +6126,16 @@ Even yourself.`,
             const modal = document.createElement('div');
             modal.id = 'symbolAchievementModal';
             modal.style.cssText = `
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(0, 0, 0, 0.85);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                z-index: 10000;
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                width: 100% !important;
+                height: 100% !important;
+                background: rgba(0, 0, 0, 0.85) !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                z-index: 999999 !important;
                 animation: fadeIn 0.5s ease;
             `;
             
@@ -6043,7 +6178,8 @@ Even yourself.`,
             `;
             
             modal.appendChild(content);
-            document.body.appendChild(modal);
+            // CRITICAL: Append to gameContainer for fullscreen support
+            document.getElementById('gameContainer').appendChild(modal);
             
             // 添加动画样式
             const style = document.createElement('style');
@@ -6184,20 +6320,34 @@ Even yourself.`,
             const resizeHandle = document.getElementById('resizeHandle');
             const uiPanel = document.getElementById('uiPanel');
             
-            if (!resizeHandle || !uiPanel) return;
+            if (!resizeHandle || !uiPanel) {
+                console.log('❌ Resize handle or UI panel not found');
+                return;
+            }
+
+            console.log('✅ Initializing mobile resize functionality');
 
             // Mouse events for desktop
             resizeHandle.addEventListener('mousedown', startResize);
             document.addEventListener('mousemove', doResize);
             document.addEventListener('mouseup', stopResize);
 
-            // Touch events for mobile
+            // Touch events for mobile - Enhanced with better event handling
             resizeHandle.addEventListener('touchstart', handleTouchStart, { passive: false });
             document.addEventListener('touchmove', handleTouchMove, { passive: false });
             document.addEventListener('touchend', stopResize);
 
+            // Additional touch events for better mobile support
+            resizeHandle.addEventListener('touchstart', (e) => {
+                console.log('📱 Touch start on resize handle');
+            });
+
             // Prevent text selection during resize
             resizeHandle.addEventListener('selectstart', (e) => e.preventDefault());
+            
+            // Make sure handle is visible and clickable on mobile
+            resizeHandle.style.touchAction = 'none';
+            resizeHandle.style.pointerEvents = 'auto';
         }
 
         function startResize(e) {
@@ -6210,10 +6360,20 @@ Even yourself.`,
 
         function handleTouchStart(e) {
             e.preventDefault();
+            e.stopPropagation();
+            
+            console.log('📱 Touch start - starting resize');
             isResizing = true;
             startX = e.touches[0].clientX;
             startWidth = parseInt(window.getComputedStyle(document.getElementById('uiPanel')).width, 10);
             document.body.style.userSelect = 'none';
+            
+            // Add visual feedback
+            const resizeHandle = document.getElementById('resizeHandle');
+            if (resizeHandle) {
+                resizeHandle.style.background = 'linear-gradient(90deg, #ffed4e, #ffd700)';
+                resizeHandle.style.transform = 'scaleX(1.2)';
+            }
         }
 
         function doResize(e) {
@@ -6252,10 +6412,13 @@ Even yourself.`,
         function handleTouchMove(e) {
             if (!isResizing) return;
             e.preventDefault();
+            e.stopPropagation();
             
             const uiPanel = document.getElementById('uiPanel');
             const deltaX = e.touches[0].clientX - startX;
             const newWidth = startWidth - deltaX;
+            
+            console.log('📱 Touch move - deltaX:', deltaX, 'newWidth:', newWidth);
             
             // Set boundaries based on screen size and orientation - allow complete hiding
             const minWidth = 0; // Allow complete hiding
@@ -6276,9 +6439,11 @@ Even yourself.`,
                 if (newWidth <= 10) {
                     // Hide panel but keep handle
                     uiPanel.classList.add('hidden');
+                    console.log('📱 Panel hidden');
                 } else {
                     uiPanel.classList.remove('hidden');
                     uiPanel.style.width = newWidth + 'px';
+                    console.log('📱 Panel width set to:', newWidth + 'px');
                 }
             }
         }
@@ -6286,9 +6451,17 @@ Even yourself.`,
         function stopResize() {
             if (!isResizing) return;
             
+            console.log('📱 Touch end - stopping resize');
             isResizing = false;
             document.body.style.cursor = '';
             document.body.style.userSelect = '';
+            
+            // Reset handle visual feedback
+            const resizeHandle = document.getElementById('resizeHandle');
+            if (resizeHandle) {
+                resizeHandle.style.background = 'linear-gradient(90deg, #ffd700, #ffed4e)';
+                resizeHandle.style.transform = 'scaleX(1)';
+            }
         }
 
         // Device detection
@@ -6296,42 +6469,238 @@ Even yourself.`,
             return window.innerWidth <= 768 || /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
         }
 
-        // Fullscreen functionality
-        function toggleFullscreen() {
+        // FORCE FULLSCREEN - NEW APPROACH: Fullscreen the BODY, not gameContainer!
+        function forceFullscreen() {
+            console.log('🚀 FORCE FULLSCREEN - NEW APPROACH: Fullscreen the entire document!');
+            
+            // Try to fullscreen the document element (not gameContainer!)
+            const elem = document.documentElement;
+            
+            const fullscreenMethods = [
+                () => elem.requestFullscreen({ navigationUI: 'hide' }),
+                () => elem.webkitRequestFullscreen({ navigationUI: 'hide' }),
+                () => elem.mozRequestFullScreen(),
+                () => elem.msRequestFullscreen(),
+                () => elem.requestFullscreen(),
+                () => elem.webkitRequestFullscreen()
+            ];
+            
+            let methodIndex = 0;
+            const tryNextMethod = () => {
+                if (methodIndex < fullscreenMethods.length) {
+                    console.log(`🚀 Trying fullscreen method ${methodIndex + 1}...`);
+                    fullscreenMethods[methodIndex]().then(() => {
+                        console.log('✅ Fullscreen successful!');
+                        // Apply fullscreen class to gameContainer for styling
+                        document.getElementById('gameContainer').classList.add('fullscreen-mode');
+                    }).catch(err => {
+                        console.log(`❌ Method ${methodIndex + 1} failed:`, err);
+                        methodIndex++;
+                        setTimeout(tryNextMethod, 100);
+                    });
+                } else {
+                    console.log('🚀 All native methods failed, using FORCE CSS fullscreen');
+                    forceCSSFullscreen();
+                }
+            };
+            
+            tryNextMethod();
+        }
+        
+        // Force CSS fullscreen when native APIs fail
+        function forceCSSFullscreen() {
+            console.log('🚀 FORCE CSS FULLSCREEN - Bypassing all browser restrictions');
             const gameContainer = document.getElementById('gameContainer');
             
-            if (!document.fullscreenElement && !gameContainer.classList.contains('mobile-fullscreen')) {
-                // Enter fullscreen
-                if (isMobile()) {
-                    // Mobile: Use custom fullscreen with landscape orientation
-                    enterMobileFullscreen();
-                } else {
-                    // Desktop: Use browser fullscreen API
-                    if (gameContainer.requestFullscreen) {
-                        gameContainer.requestFullscreen();
-                    } else if (gameContainer.webkitRequestFullscreen) {
-                        gameContainer.webkitRequestFullscreen();
-                    } else if (gameContainer.msRequestFullscreen) {
-                        gameContainer.msRequestFullscreen();
+            // Remove any existing fullscreen classes
+            gameContainer.classList.remove('fullscreen-mode', 'mobile-fullscreen', 'force-fullscreen');
+            
+            // Force fullscreen styles WITHOUT z-index (KEY FIX!)
+            gameContainer.style.cssText = `
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                width: 100vw !important;
+                height: 100vh !important;
+                background: #1a1a2e !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                border: none !important;
+                outline: none !important;
+                display: flex !important;
+            `;
+            
+            // Force body styles
+            document.body.style.cssText = `
+                margin: 0 !important;
+                padding: 0 !important;
+                overflow: hidden !important;
+                background: #000000 !important;
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                width: 100vw !important;
+                height: 100vh !important;
+            `;
+            
+            // Force html styles
+            document.documentElement.style.cssText = `
+                margin: 0 !important;
+                padding: 0 !important;
+                overflow: hidden !important;
+                background: #000000 !important;
+                height: 100vh !important;
+            `;
+            
+            // Hide browser UI elements if possible
+            if (navigator.userAgent.includes('Mobile')) {
+                // Mobile: try to hide address bar and force landscape
+                window.scrollTo(0, 1);
+                setTimeout(() => window.scrollTo(0, 0), 100);
+                
+                // Force landscape orientation
+                if (screen.orientation && screen.orientation.lock) {
+                    screen.orientation.lock('landscape').catch(err => {
+                        console.log('Orientation lock failed:', err);
+                    });
+                }
+            }
+            
+            // Add fullscreen class for CSS rules
+            gameContainer.classList.add('force-fullscreen');
+            
+            // Update button
+            const fullscreenBtn = document.querySelector('button[onclick="toggleFullscreen()"]');
+            if (fullscreenBtn) fullscreenBtn.textContent = '📺 Exit Fullscreen';
+            
+            // Force all modals to appear above fullscreen
+            forceModalZIndex();
+            
+            console.log('🚀 ✅ FORCE FULLSCREEN APPLIED!');
+        }
+        
+        // Force modal z-index to appear above fullscreen - simplified
+        function forceModalZIndex() {
+            console.log('🚀 Ensuring modals have correct z-index...');
+            
+            // Since gameContainer has NO z-index now, modals with z-index will naturally appear above
+            // Just ensure they have position: fixed and a reasonable z-index
+            const modals = [
+                'symbolAchievementModal',
+                'wisdomPathModal', 
+                'dialogOverlay',
+                'dialogModal',
+                'libraryRefreshHint',
+                'guideFinalDialog'
+            ];
+            
+            modals.forEach(modalId => {
+                const modal = document.getElementById(modalId);
+                if (modal) {
+                    // Ensure modal has position fixed and high z-index
+                    if (modal.style.display && modal.style.display !== 'none') {
+                        modal.style.setProperty('z-index', '999999', 'important');
+                        modal.style.setProperty('position', 'fixed', 'important');
+                        console.log('✅ Modal ready:', modalId);
                     }
                 }
+            });
+            
+            console.log('✅ Modal z-index check complete');
+        }
+        
+        // Exit force fullscreen
+        function exitForceFullscreen() {
+            console.log('🚀 Exiting force fullscreen...');
+            const gameContainer = document.getElementById('gameContainer');
+            
+            // Reset all styles
+            gameContainer.style.cssText = '';
+            document.body.style.cssText = '';
+            document.documentElement.style.cssText = '';
+            
+            // Remove fullscreen classes
+            gameContainer.classList.remove('force-fullscreen', 'fullscreen-mode', 'mobile-fullscreen');
+            
+            // Remove force modal style
+            const forceModalStyle = document.getElementById('forceModalStyle');
+            if (forceModalStyle) {
+                forceModalStyle.remove();
+            }
+            
+            // Unlock orientation
+            if (screen.orientation && screen.orientation.unlock) {
+                screen.orientation.unlock();
+            }
+            
+            // Update button
+            const fullscreenBtn = document.querySelector('button[onclick="toggleFullscreen()"]');
+            if (fullscreenBtn) fullscreenBtn.textContent = '📺 Fullscreen';
+            
+            console.log('🚀 ✅ Force fullscreen exited');
+        }
+        
+        // Enhanced fullscreen toggle with force option
+        function toggleFullscreen() {
+            console.log('📺 Toggle fullscreen clicked');
+            const gameContainer = document.getElementById('gameContainer');
+            
+            if (!gameContainer) {
+                console.log('❌ Game container not found');
+                return;
+            }
+            
+            const isCurrentlyFullscreen = document.fullscreenElement || 
+                                         document.webkitFullscreenElement || 
+                                         document.mozFullScreenElement || 
+                                         document.msFullscreenElement ||
+                                         gameContainer.classList.contains('mobile-fullscreen') ||
+                                         gameContainer.classList.contains('fullscreen-mode') ||
+                                         gameContainer.classList.contains('force-fullscreen');
+            
+            console.log('📺 Currently fullscreen:', isCurrentlyFullscreen);
+            
+            if (!isCurrentlyFullscreen) {
+                // Enter fullscreen - use force method
+                console.log('🚀 Using FORCE fullscreen method');
+                forceFullscreen();
             } else {
+                console.log('📺 Exiting fullscreen');
                 // Exit fullscreen
-                if (gameContainer.classList.contains('mobile-fullscreen')) {
+                if (gameContainer.classList.contains('force-fullscreen')) {
+                    exitForceFullscreen();
+                } else if (gameContainer.classList.contains('mobile-fullscreen')) {
                     exitMobileFullscreen();
                 } else if (document.exitFullscreen) {
-                    document.exitFullscreen();
+                    document.exitFullscreen().catch(() => {
+                        gameContainer.classList.remove('fullscreen-mode');
+                        const fullscreenBtn = document.querySelector('button[onclick="toggleFullscreen()"]');
+                        if (fullscreenBtn) fullscreenBtn.textContent = '📺 Fullscreen';
+                    });
                 } else if (document.webkitExitFullscreen) {
                     document.webkitExitFullscreen();
+                } else if (document.mozCancelFullScreen) {
+                    document.mozCancelFullScreen();
                 } else if (document.msExitFullscreen) {
                     document.msExitFullscreen();
+                } else {
+                    // Fallback: remove CSS fullscreen class
+                    gameContainer.classList.remove('fullscreen-mode');
+                    const fullscreenBtn = document.querySelector('button[onclick="toggleFullscreen()"]');
+                    if (fullscreenBtn) fullscreenBtn.textContent = '📺 Fullscreen';
                 }
             }
         }
 
         // Mobile fullscreen functions
         function enterMobileFullscreen() {
+            console.log('📱 Entering mobile fullscreen');
             const gameContainer = document.getElementById('gameContainer');
+            
+            if (!gameContainer) {
+                console.log('❌ Game container not found for mobile fullscreen');
+                return;
+            }
             
             // Lock orientation to landscape
             if (screen.orientation && screen.orientation.lock) {
@@ -6346,6 +6715,25 @@ Even yourself.`,
             // Hide browser UI
             document.body.style.overflow = 'hidden';
             
+            // Apply 16:10 aspect ratio with black bars
+            const windowAspectRatio = window.innerWidth / window.innerHeight;
+            const targetAspectRatio = 16 / 10; // 1.6
+            
+            console.log('📱 Window aspect ratio:', windowAspectRatio, 'Target:', targetAspectRatio);
+            
+            if (windowAspectRatio > targetAspectRatio) {
+                // Window is wider than 16:10, add black bars on sides
+                const targetWidth = window.innerHeight * targetAspectRatio;
+                gameContainer.style.maxWidth = targetWidth + 'px';
+                gameContainer.style.margin = '0 auto';
+                console.log('📱 Adding side black bars, width:', targetWidth);
+            } else {
+                // Window is taller than 16:10, use full width
+                gameContainer.style.maxWidth = '100vw';
+                gameContainer.style.margin = '0 auto';
+                console.log('📱 Using full width');
+            }
+            
             // Force landscape layout
             const sceneArea = document.getElementById('sceneArea');
             if (sceneArea) {
@@ -6353,13 +6741,32 @@ Even yourself.`,
                 sceneArea.style.width = '100%';
                 sceneArea.style.height = '100%';
             }
+            
+            // Update button text
+            const fullscreenBtn = document.querySelector('button[onclick="toggleFullscreen()"]');
+            if (fullscreenBtn) fullscreenBtn.textContent = '📺 Exit Fullscreen';
+            
+            // Force modals to appear above fullscreen
+            forceModalZIndex();
+            
+            console.log('✅ Mobile fullscreen applied with 16:10 aspect ratio');
         }
 
         function exitMobileFullscreen() {
+            console.log('📱 Exiting mobile fullscreen');
             const gameContainer = document.getElementById('gameContainer');
+            
+            if (!gameContainer) {
+                console.log('❌ Game container not found for exit mobile fullscreen');
+                return;
+            }
             
             // Remove mobile fullscreen class
             gameContainer.classList.remove('mobile-fullscreen');
+            
+            // Reset styles
+            gameContainer.style.maxWidth = '';
+            gameContainer.style.margin = '';
             
             // Restore browser UI
             document.body.style.overflow = '';
@@ -6368,6 +6775,12 @@ Even yourself.`,
             if (screen.orientation && screen.orientation.unlock) {
                 screen.orientation.unlock();
             }
+            
+            // Update button text
+            const fullscreenBtn = document.querySelector('button[onclick="toggleFullscreen()"]');
+            if (fullscreenBtn) fullscreenBtn.textContent = '📺 Fullscreen';
+            
+            console.log('✅ Mobile fullscreen exited');
         }
 
         // Toggle UI panel visibility
@@ -6384,9 +6797,10 @@ Even yourself.`,
             }
         }
 
-        // Handle fullscreen change events
+        // Handle fullscreen change events - Enhanced compatibility
         document.addEventListener('fullscreenchange', handleFullscreenChange);
         document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+        document.addEventListener('mozfullscreenchange', handleFullscreenChange);
         document.addEventListener('msfullscreenchange', handleFullscreenChange);
 
         function handleFullscreenChange() {
@@ -6395,18 +6809,23 @@ Even yourself.`,
             
             const isFullscreen = document.fullscreenElement || 
                                document.webkitFullscreenElement || 
+                               document.mozFullScreenElement ||
                                document.msFullscreenElement ||
-                               gameContainer.classList.contains('mobile-fullscreen');
+                               gameContainer.classList.contains('mobile-fullscreen') ||
+                               gameContainer.classList.contains('fullscreen-mode');
             
             if (isFullscreen) {
                 if (gameContainer.classList.contains('mobile-fullscreen')) {
-                    // Mobile fullscreen mode
+                    // Mobile fullscreen mode - ensure class is applied
                     gameContainer.classList.add('mobile-fullscreen');
-                } else {
+                } else if (!gameContainer.classList.contains('fullscreen-mode')) {
                     // Desktop fullscreen mode
                     gameContainer.classList.add('fullscreen-mode');
                 }
                 if (fullscreenBtn) fullscreenBtn.textContent = '📺 Exit Fullscreen';
+                
+                // CRITICAL: Force modals to appear above fullscreen
+                forceModalZIndex();
             } else {
                 gameContainer.classList.remove('fullscreen-mode', 'mobile-fullscreen');
                 if (fullscreenBtn) fullscreenBtn.textContent = '📺 Fullscreen';
@@ -6451,17 +6870,128 @@ Even yourself.`,
             }
         }
 
+        // Test mobile functions
+        function testMobileFunctions() {
+            console.log('🔧 Testing mobile functions...');
+            console.log('📱 Is mobile:', isMobile());
+            console.log('📱 Window size:', window.innerWidth, 'x', window.innerHeight);
+            console.log('📱 Orientation:', window.orientation);
+            
+            const resizeHandle = document.getElementById('resizeHandle');
+            const uiPanel = document.getElementById('uiPanel');
+            const gameContainer = document.getElementById('gameContainer');
+            
+            console.log('🔧 Resize handle found:', !!resizeHandle);
+            console.log('🔧 UI panel found:', !!uiPanel);
+            console.log('🔧 Game container found:', !!gameContainer);
+            
+            if (resizeHandle) {
+                console.log('🔧 Resize handle style:', {
+                    display: resizeHandle.style.display,
+                    position: resizeHandle.style.position,
+                    width: resizeHandle.style.width,
+                    height: resizeHandle.style.height,
+                    pointerEvents: resizeHandle.style.pointerEvents,
+                    touchAction: resizeHandle.style.touchAction
+                });
+            }
+            
+            if (uiPanel) {
+                console.log('🔧 UI panel style:', {
+                    width: uiPanel.style.width,
+                    classList: uiPanel.classList.toString()
+                });
+            }
+            
+            // Test fullscreen
+            console.log('🔧 Testing fullscreen...');
+            toggleFullscreen();
+        }
+
+        // Apply 16:10 aspect ratio for mobile landscape (non-fullscreen)
+        function applyMobileLandscapeRatio() {
+            if (!isMobile()) return;
+            
+            const gameContainer = document.getElementById('gameContainer');
+            if (!gameContainer || gameContainer.classList.contains('mobile-fullscreen')) return;
+            
+            const isLandscape = window.innerWidth > window.innerHeight;
+            
+            if (isLandscape) {
+                const windowAspectRatio = window.innerWidth / window.innerHeight;
+                const targetAspectRatio = 16 / 10;
+                
+                console.log('📱 Mobile landscape detected - applying 16:10 ratio');
+                console.log('📱 Window size:', window.innerWidth, 'x', window.innerHeight);
+                console.log('📱 Aspect ratio:', windowAspectRatio, 'vs target:', targetAspectRatio);
+                
+                if (windowAspectRatio > targetAspectRatio) {
+                    const targetWidth = window.innerHeight * targetAspectRatio;
+                    
+                    // Force black background
+                    document.body.style.cssText = 'background: #000000 !important; margin: 0 !important; padding: 0 !important; overflow-x: hidden !important;';
+                    
+                    // Apply strict width constraint
+                    gameContainer.style.maxWidth = targetWidth + 'px';
+                    gameContainer.style.width = targetWidth + 'px';
+                    gameContainer.style.minWidth = targetWidth + 'px';
+                    gameContainer.style.margin = '0 auto';
+                    gameContainer.style.position = 'relative';
+                    gameContainer.style.left = '0';
+                    gameContainer.style.right = '0';
+                    
+                    console.log('📱 ✅ Black bars added! Container width:', targetWidth, 'px');
+                    console.log('📱 ✅ Viewport width:', window.innerWidth, 'px');
+                    console.log('📱 ✅ Black bar width on each side:', (window.innerWidth - targetWidth) / 2, 'px');
+                } else {
+                    document.body.style.background = '#000000';
+                    gameContainer.style.maxWidth = '100vw';
+                    gameContainer.style.width = '100vw';
+                    gameContainer.style.margin = '0';
+                    console.log('📱 Using full width (screen not wider than 16:10)');
+                }
+            } else {
+                // Portrait mode - reset
+                document.body.style.cssText = '';
+                gameContainer.style.maxWidth = '';
+                gameContainer.style.width = '';
+                gameContainer.style.minWidth = '';
+                gameContainer.style.margin = '';
+                gameContainer.style.position = '';
+                gameContainer.style.left = '';
+                gameContainer.style.right = '';
+                console.log('📱 Portrait mode - reset to normal');
+            }
+        }
+
         // Start Game
         window.onload = function() {
+            console.log('🚀 Game initializing...');
             initGame();
-            initMobileResize();
+            
+            // Initialize mobile resize with delay to ensure DOM is ready
+            setTimeout(() => {
+                console.log('📱 Initializing mobile resize...');
+                initMobileResize();
+                
+                // Apply mobile landscape ratio on load
+                applyMobileLandscapeRatio();
+            }, 100);
+            
             addPanelToggle();
             
-            // Add orientation change listener
-            window.addEventListener('orientationchange', handleOrientationChange);
-            window.addEventListener('resize', handleOrientationChange);
+            // Add orientation change listener with aspect ratio check
+            const handleOrientationWithRatio = () => {
+                handleOrientationChange();
+                setTimeout(() => applyMobileLandscapeRatio(), 150);
+            };
+            
+            window.addEventListener('orientationchange', handleOrientationWithRatio);
+            window.addEventListener('resize', handleOrientationWithRatio);
             
             document.getElementById('commandInput').focus();
+            
+            console.log('✅ Game initialized');
         };
 
         window.onbeforeunload = function() {
