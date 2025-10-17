@@ -84,7 +84,7 @@ class HexagramGame {
                 description: "A tall round hall, dome painted with stars, bookshelves like a maze. Candles flicker, pages turn on their own, and the air is filled with the fragrance of ink and dust.",
                 background: "linear-gradient(135deg, #2d1b69, #1a1a2e, #16213e), radial-gradient(circle at 50% 20%, rgba(255, 215, 0, 0.15) 0%, transparent 70%)",
                 npcs: [],
-                items: ['4 paths of wisdom'],
+                items: [],
                 exits: { north: 'theater' }
             },
             theater: {
@@ -116,7 +116,7 @@ class HexagramGame {
                 description: "On the ground still lies the broken Hexagram Stone Disk. The kind old man smiles warmly at you.",
                 background: "linear-gradient(135deg, #0f0f23, #1a1a2e, #16213e), radial-gradient(circle at 50% 50%, rgba(255, 215, 0, 0.3) 0%, transparent 50%)",
                 npcs: ['guide'],
-                items: [], // 最终房间不应该有可拾取的物品
+                items: [], // Final room should not have collectible items
                 exits: {}
             }
         };
@@ -227,6 +227,12 @@ class HexagramGame {
                 break;
             case 'help':
                 result = this.handleHelp();
+                break;
+            case 'learn':
+            case 'live':
+            case 'dialogue':
+            case 'reflect':
+                result = this.handleLibraryPath(action);
                 break;
             case 'water':
             case 'fertilize':
@@ -1401,6 +1407,27 @@ and may every step beyond this courtyard bring you strength, wonder, and joy."�
             type: 'success',
             message: "Item added to inventory: Seed of Love 🌱\n\nThe meaning of choice does not lie in embracing all possibilities,\nBut in choosing one among countless possibilities,\nAnd bravely accepting the cost of giving up the others.\n\nOnly by devoting your life to those you want to guard,\nTo care, to love, to listen, to respect,\nCan you possibly receive trust and love,\nAnd possibly find the meaning and value of living.\n\nThese roses may be your lover,\nOr may be friends, vocation, hobby, home,\nEven yourself.\n\n(Type 'look' to check the exit and type 'go <direction>' to go to the next room)",
             item: 'seed_of_love'
+        };
+    }
+
+    handleLibraryPath(pathType) {
+        if (this.gameState.currentRoom !== 'library') {
+            return { type: 'error', message: "You can only explore wisdom paths in the library." };
+        }
+
+        // Add the path to completed paths
+        this.gameState.libraryPaths.add(pathType);
+
+        const pathMessages = {
+            learn: "You have completed the Learning Path! 📚\n\nYou walk into a corridor shrouded in brilliance. In front of you, multiple paths of knowledge appear:\n\n• [school] School gate — bells echo, scholars walk into halls\n• [expert] Expert lecture — phantom sages speak gently\n• [online] Online resources — countless screens flicker, knowledge flows at your fingertips\n• [book] Tower of books — scrolls piled high, whispering softly\n\n\"No matter the form, only by loving and actively seeking to learn can wisdom begin.\"\n\nYou obtain Light of Wisdom [Learning · Understanding].",
+            live: "You have completed the Living Path! 🌍\n\nA crack opens in the bookshelf, pulling you into an illusion—a miniature world of society and life:\n\n• [market] Bustling market — voices rise and fall in bargaining\n• [workshop] Craftsman's workshop — sparks fly, skills tempered in hands\n• [journey] Journey afar — mountains and strangers await\n• [entertainment] Entertainment world — behind laughter hides joy and sorrow\n• [career] Job market — surging crowds, each soul seeking a place\n\n\"With curiosity and critical eyes, fully immersing in society, your experiences will eventually become wisdom.\"\n\nYou obtain Light of Wisdom [Living · Experience].",
+            dialogue: "You have completed the Dialogue Path! 💬\n\nVoices echo through the corridor. As you approach, phantoms take shape one by one:\n\n• [chat] Friends' chat — cheerful laughter dispels loneliness\n• [talk] Sincere voice — speaking and listening draw closer hearts\n• [debate] Fierce debate — logic and viewpoints clash like swords\n• [co-create] Co-creation — minds intertwine, igniting sparks\n\n\"Meeting, exchanging, understanding—social interaction too is an important path toward wisdom.\"\n\nYou obtain Light of Wisdom [Dialogue · Communication].",
+            reflect: "You have completed the Reflection Path! 🤔\n\nIn the center of the hall appears a water mirror, reflecting your past choices and experiences:\n\n• [mirror] Mirror of reflection — see shadows and regrets of the past\n• [memory] Corridor of memory — old scenes replay, awaiting review\n• [thought] Abyss of thought — inner whispers and unresolved questions\n• [diary] Torn diary pages — true voices hidden in writing\n\n\"Only by constantly revising oneself in thought can one continue to grow.\"\n\nYou obtain Light of Wisdom [Thinking · Reflection]."
+        };
+
+        return {
+            type: 'success',
+            message: pathMessages[pathType]
         };
     }
 }
